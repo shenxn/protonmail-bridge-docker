@@ -1,4 +1,4 @@
-FROM debian:buster-slim
+FROM ubuntu:latest
 LABEL maintainer="Xiaonan Shen <s@sxn.dev>"
 
 EXPOSE 25/tcp

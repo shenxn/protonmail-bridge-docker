@@ -4,6 +4,8 @@ on:
   push:
     tags:
     - '*'
+  repository_dispatch:
+    types: update
 
 env:
   DOCKER_TAG: shenxn/protonmail-bridge
