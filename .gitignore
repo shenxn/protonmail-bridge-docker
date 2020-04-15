@@ -1,0 +1,7 @@
+*
+
+!.gitignore
+!LICENSE
+!*.sh
+!gpgparams
+!Dockerfile
