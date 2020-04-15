@@ -1,11 +1,18 @@
 #!/bin/bash
 
-set -x
+set -ex
+
+source /protonmail/releaserc
 
 # Install dependents
-# libgl1-mesa-glx is installed since the bridge requires libgl and we removed the qt dependencies
 apt-get update
-apt-get install -y --no-install-recommends socat pass libgl1-mesa-glx
+apt-get install -y --no-install-recommends socat pass
+
+# Download repacked deb
+apt-get install -y wget
+wget -O /protonmail/protonmail.deb https://github.com/shenxn/protonmail-bridge-docker/releases/download/${RELEASE}/${DEB_FILE}
+apt-get purge -y wget
+apt-get autoremove -y
 
 # Install protonmail bridge
 apt-get install -y --no-install-recommends /protonmail/protonmail.deb

@@ -1,6 +1,8 @@
 *
 
 !.dockerignore
-!*.sh
+!releaserc
+!entrypoint.sh
+!install.sh
 !gpgparams
 !Dockerfile

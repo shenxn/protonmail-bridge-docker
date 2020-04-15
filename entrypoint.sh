@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -e
+set -ex
 
 # Initialize
 if [[ $1 == init ]]; then
