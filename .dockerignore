@@ -1,9 +1,6 @@
 *
 
-!.gitignore
 !.dockerignore
-!LICENSE
-!README.md
 !*.sh
 !gpgparams
 !Dockerfile
