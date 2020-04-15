@@ -1,2 +1,2 @@
-RELEASE=1.2.6-1
+RELEASE=1.2.5-1
 DEB_FILE=protonmail-bridge_${RELEASE}_amd64.deb
