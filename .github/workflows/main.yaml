@@ -3,9 +3,9 @@ name: build
 on:
   push:
     tags:
-    - '*'
+    - 'v*'
   repository_dispatch:
-    types: update
+    types: build
 
 env:
   DOCKER_TAG: shenxn/protonmail-bridge
@@ -44,13 +44,7 @@ jobs:
         asset_path: ./deb/${{ env.DEB_FILE }}
         asset_name: ${{ env.DEB_FILE }}
         asset_content_type: application/vnd.debian.binary-package
-    - name: Docker Login
-      uses: azure/docker-login@v1
-      with:
-        username: ${{ secrets.REGISTRY_USERNAME }}
-        password: ${{ secrets.REGISTRY_PASSWORD }}
-    - name: Docker Build
-      run: |
-        docker build . -t ${DOCKER_TAG}:latest -t ${DOCKER_TAG}:${RELEASE}
-        docker push ${DOCKER_TAG}:latest
-        docker push ${DOCKER_TAG}:${RELEASE}
+    - name: Push Tag to Trigger Docker Hub Build
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: bash push-tag.sh

@@ -19,7 +19,7 @@ if [[ RELEASE != CURR_RELEASE ]]; then
     git config --local user.name "Github Action"
     git add releaserc
     git commit -m "Release ${CURR_RELEASE}" --author="Xiaonan Shen <s@sxn.dev>"
-    git tag -a ${CURR_RELEASE} -m "Release ${CURR_RELEASE}"
+    git tag -a "v${CURR_RELEASE}" -m "Release ${CURR_RELEASE}"
 
     # push
     REMOTE_REPO="https://${GITHUB_ACTOR}:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
@@ -30,6 +30,6 @@ if [[ RELEASE != CURR_RELEASE ]]; then
     curl -H "Accept: application/vnd.github.everest-preview+json" \
         -H "Authorization: token ${PERSONAL_TOKEN}" \
         --request POST \
-        --data '{"event_type": "update"}' \
+        --data '{"event_type": "build"}' \
         https://api.github.com/repos/${GITHUB_REPOSITORY}/dispatches
 fi
