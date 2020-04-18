@@ -13,10 +13,8 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@master
-      with:
-        ref: master
     - name: Check Update
-      run: bash check-update.sh
+      run: bash update-check.sh
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         PERSONAL_TOKEN: ${{ secrets.PERSONAL_TOKEN }}
