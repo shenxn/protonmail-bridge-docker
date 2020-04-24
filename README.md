@@ -30,3 +30,11 @@ docker run -d --name=protonmail-bridge -v protonmail:/root -p 1025:25/tcp -p 114
 ## Compatability
 
 The bridge currently only supports some of the email clients and can only run on `amd64` architecture. More details can be found on the official website. I've tested this on a Synology DiskStation and it runs well. However, you may need ssh onto it to run the interactive docker command to add your account. The main reason of using this instead of environment variables is that it seems to be the best way to support two-factor authentication.
+
+
+## TODO
+
+Since the protonmail bridge is now [open source](https://protonmail.com/blog/bridge-open-source/), there is more thing we can do here.
+
+- [ ] Build an ARM version so that it can run on things like Raspberry Pi.
+- [ ] Remove GUI dependencies to reduce the docker image size.
