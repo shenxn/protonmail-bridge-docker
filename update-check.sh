@@ -2,8 +2,6 @@
 
 set -ex
 
-REMOTE_REPO="https://${GITHUB_ACTOR}:${PERSONAL_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
-
 VERSION=`cat VERSION`
 
 JSON_CONTENT=$(curl -q https://protonmail.com/download/current_version_linux.json)
@@ -14,21 +12,12 @@ if [[ $VERSION != $CURR_VERSION ]]; then
     echo "New release found: ${CURR_VERSION}"
 
     # bump up to new release
-    cat ${CURR_VERSION} > VERSION
+    echo ${CURR_VERSION} > VERSION
 
     # commit
     git config --local user.email "actions@github.com"
     git config --local user.name "Github Action"
     git add VERSION
     git commit -m "Bump version to ${CURR_VERSION}" --author="Xiaonan Shen <s@sxn.dev>"
-
-    # push
-    git push "${REMOTE_REPO}" master
-
-    # # trigger actions
-    # curl -H "Accept: application/vnd.github.everest-preview+json" \
-    #     -H "Authorization: token ${PERSONAL_TOKEN}" \
-    #     --request POST \
-    #     --data '{"event_type": "build"}' \
-    #     https://api.github.com/repos/${GITHUB_REPOSITORY}/dispatches
+    git push
 fi

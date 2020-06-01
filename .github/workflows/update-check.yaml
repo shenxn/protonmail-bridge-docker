@@ -12,12 +12,12 @@ on:
   - cron: '0 0 * * *'  # runs everyday at midnight
 
 jobs:
-  build:
+  check:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout
       uses: actions/checkout@master
+      with:
+        token: ${{ secrets.PERSONAL_TOKEN }}
     - name: Check Update
       run: bash update-check.sh
-      env:
-        PERSONAL_TOKEN: ${{ secrets.PERSONAL_TOKEN }}
