@@ -13,6 +13,8 @@ apt-get install -y --no-install-recommends socat pass
 apt-get install -y wget binutils xz-utils
 
 # Repack deb (remove unnecessary dependencies)
+mkdir deb
+cd deb
 wget https://protonmail.com/download/${DEB_FILE}
 ar x -v ${DEB_FILE}
 mkdir control
@@ -22,12 +24,13 @@ cd control
 tar cvfJ ../control.tar.xz .
 cd ../
 ar rcs -v ${DEB_FILE} debian-binary control.tar.xz data.tar.xz
+cd ../
 
 # Install protonmail bridge
-apt-get install -y --no-install-recommends ./${DEB_FILE}
+apt-get install -y --no-install-recommends ./deb/${DEB_FILE}
 
 # Cleanup
 apt-get purge -y wget binutils xz-utils
 apt-get autoremove -y
 rm -rf /var/lib/apt/lists/*
-rm ${DEB_FILE}
+rm -rf deb
