@@ -5,6 +5,15 @@ on:
     branches:
       - master
       - dev
+    paths:
+      - .github/workflows/main.yaml
+      - .dockerignore
+      - Dockerfile
+      - entrypoint.sh
+      - gpgparams
+      - install.sh
+      - set-env.sh
+      - VERSION
 
 env:
   DOCKER_TAG: shenxn/protonmail-bridge
