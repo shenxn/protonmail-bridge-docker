@@ -3,7 +3,11 @@ name: update check
 on:
   push:
     branches:
-    - update-check
+      - master
+      - dev
+    paths:
+      - .github/workflows/update-check.yaml
+      - update-check.sh
   schedule:
   - cron: '0 0 * * *'  # runs everyday at midnight
 
@@ -16,5 +20,4 @@ jobs:
     - name: Check Update
       run: bash update-check.sh
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         PERSONAL_TOKEN: ${{ secrets.PERSONAL_TOKEN }}
