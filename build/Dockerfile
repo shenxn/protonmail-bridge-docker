@@ -8,7 +8,7 @@ WORKDIR /build/
 COPY build.sh VERSION /build/
 RUN bash build.sh
 
-FROM ubuntu:20.04
+FROM ubuntu:latest
 LABEL maintainer="Xiaonan Shen <s@sxn.dev>"
 
 EXPOSE 25/tcp
