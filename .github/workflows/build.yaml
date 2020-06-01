@@ -16,7 +16,7 @@ on:
       - build/VERSION
 
 env:
-  DOCKER_TAG: shenxn/protonmail-bridge
+  DOCKER_REPO: shenxn/protonmail-bridge
 
 jobs:
   build:
@@ -24,12 +24,10 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@master
-      - name: Docker login
-        uses: azure/docker-login@v1
-        with:
-          username: ${{ secrets.REGISTRY_USERNAME }}
-          password: ${{ secrets.REGISTRY_USERNAME }}
       - name: Set up Docker buildx
         uses: crazy-max/ghaction-docker-buildx@v2
       - name: Build image
         run: bash build/build-docker.sh
+        env:
+          DOCKER_USERNAME: ${{ secrets.REGISTRY_USERNAME }}
+          DOCKER_PASSWORD: ${{ secrets.REGISTRY_PASSWORD }}
