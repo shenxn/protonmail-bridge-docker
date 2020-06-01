@@ -16,7 +16,7 @@ on:
       - VERSION
 
 env:
-  DOCKER_TAG: shenxn/protonmail-bridge
+  DOCKER_REPO: shenxn/protonmail-bridge
 
 jobs:
   build:

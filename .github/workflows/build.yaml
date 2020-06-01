@@ -1,0 +1,35 @@
+name: build from source
+
+on:
+  push:
+    branches:
+      - master
+      - dev
+    paths:
+      - .github/workflows/build.yaml
+      - build/.dockerignore
+      - build/build-docker.sh
+      - build/build.sh
+      - build/Dockerfile
+      - build/entrypoint.sh
+      - build/gpgparams
+      - build/VERSION
+
+env:
+  DOCKER_TAG: shenxn/protonmail-bridge
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@master
+      - name: Docker login
+        uses: azure/docker-login@v1
+        with:
+          username: ${{ secrets.REGISTRY_USERNAME }}
+          password: ${{ secrets.REGISTRY_USERNAME }}
+      - name: Set up Docker buildx
+        uses: crazy-max/ghaction-docker-buildx@v2
+      - name: Build image
+        run: bash build/build-docker.sh
