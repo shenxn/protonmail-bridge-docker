@@ -2,10 +2,9 @@ name: build
 
 on:
   push:
-    tags:
-    - 'v*'
-  repository_dispatch:
-    types: build
+    branches:
+      - master
+      - dev
 
 env:
   DOCKER_TAG: shenxn/protonmail-bridge
@@ -14,37 +13,14 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout
-      uses: actions/checkout@master
-    - name: Set Env
-      run: |
-        source releaserc
-        echo "::set-env name=RELEASE::${RELEASE}"
-        echo "::set-env name=DEB_FILE::${DEB_FILE}"
-    - name: Repack deb
-      run: bash repack-deb.sh
-    - name: Create Release
-      id: create-release
-      uses: actions/create-release@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        tag_name: ${{ env.RELEASE }}
-        release_name: Release ${{ env.RELEASE }}
-        body: Repacked ProtonMail Bridge deb without dependencies not needed by cli mode.
-        draft: false
-        prerelease: false
-    - name: Upload Release Asset
-      id: upload-release-asset 
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create-release.outputs.upload_url }}
-        asset_path: ./deb/${{ env.DEB_FILE }}
-        asset_name: ${{ env.DEB_FILE }}
-        asset_content_type: application/vnd.debian.binary-package
-    - name: Push Tag to Trigger Docker Hub Build
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: bash push-tag.sh
+      - name: Checkout
+        uses: actions/checkout@master
+      - name: Set Env
+        run: bash set-env.sh
+      - uses: docker/build-push-action@v1
+        with:
+          username: ${{ secrets.REGISTRY_USERNAME }}
+          password: ${{ secrets.REGISTRY_PASSWORD }}
+          repository: shenxn/protonmail-bridge
+          tags: ${{ env.TAGS }}
+          add_git_labels: true

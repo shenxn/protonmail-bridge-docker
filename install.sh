@@ -2,21 +2,32 @@
 
 set -ex
 
-source /protonmail/releaserc
+VERSION=`cat VERSION`
+DEB_FILE=protonmail-bridge_${VERSION}_amd64.deb
 
 # Install dependents
 apt-get update
 apt-get install -y --no-install-recommends socat pass
 
-# Download repacked deb
-apt-get install -y wget
-wget -O /protonmail/protonmail.deb https://github.com/shenxn/protonmail-bridge-docker/releases/download/${RELEASE}/${DEB_FILE}
-apt-get purge -y wget
-apt-get autoremove -y
+# Build time dependencies
+apt-get install -y wget binutils xz-utils
+
+# Repack deb (remove unnecessary dependencies)
+wget https://protonmail.com/download/${DEB_FILE}
+ar x -v ${DEB_FILE}
+mkdir control
+tar xvfJ control.tar.xz -C control
+sed -i "s/^Depends: .*$/Depends: libsecret-1-0, libgl1-mesa-glx/" control/control
+cd control
+tar cvfJ ../control.tar.xz .
+cd ../
+ar rcs -v ${DEB_FILE} debian-binary control.tar.xz data.tar.xz
 
 # Install protonmail bridge
-apt-get install -y --no-install-recommends /protonmail/protonmail.deb
+apt-get install -y --no-install-recommends ./${DEB_FILE}
 
 # Cleanup
+apt-get purge -y wget binutils xz-utils
+apt-get autoremove -y
 rm -rf /var/lib/apt/lists/*
-rm /protonmail/protonmail.deb
+rm ${DEB_FILE}
