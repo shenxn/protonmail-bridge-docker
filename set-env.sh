@@ -5,7 +5,7 @@ set -ex
 VERSION=`cat VERSION`
 
 if [[ $GITHUB_REF == "refs/heads/master" ]]; then
-    echo "::set-env name=TAGS::latest,${VERSION}"
+    echo "TAGS=latest,${VERSION}" >> $GITHUB_ENV
 else
-    echo "::set-env name=TAGS::dev,${VERSION}-dev"
+    echo "TAGS=dev,${VERSION}-dev" >> $GITHUB_ENV
 fi
