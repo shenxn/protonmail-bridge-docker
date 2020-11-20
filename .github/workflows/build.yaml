@@ -7,14 +7,11 @@ on:
       - dev
     paths:
       - .github/workflows/build.yaml
-      - build/.dockerignore
-      - build/build-docker.sh
-      - build/build.sh
-      - build/Dockerfile
-      - build/entrypoint.sh
-      - build/gpgparams
-      - build/VERSION
+      - build/*
   pull_request:
+    paths:
+      - .github/workflows/build.yaml
+      - build/*
 
 env:
   DOCKER_REPO: shenxn/protonmail-bridge
