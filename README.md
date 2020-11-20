@@ -3,7 +3,8 @@
 ![version badge](https://img.shields.io/docker/v/shenxn/protonmail-bridge)
 ![image size badge](https://img.shields.io/docker/image-size/shenxn/protonmail-bridge/build)
 ![docker pulls badge](https://img.shields.io/docker/pulls/shenxn/protonmail-bridge)
-![build badge](https://github.com/shenxn/protonmail-bridge-docker/workflows/.github/workflows/main.yaml/badge.svg)
+![deb badge](https://github.com/shenxn/protonmail-bridge-docker/workflows/pack%20from%20deb/badge.svg)
+![build badge](https://github.com/shenxn/protonmail-bridge-docker/workflows/build%20from%20source/badge.svg)
 
 This is an unofficial Docker container of the [ProtonMail Bridge](https://protonmail.com/bridge/). Some of the scripts are based on [Hendrik Meyer's work](https://gitlab.com/T4cC0re/protonmail-bridge-docker).
 
