@@ -13,6 +13,7 @@ on:
       - gpgparams
       - install.sh
       - VERSION
+  pull_request:
 
 env:
   DOCKER_REPO: shenxn/protonmail-bridge
@@ -48,4 +49,4 @@ jobs:
             ${{ steps.repo.outputs.repo }}:latest
             ${{ steps.repo.outputs.repo }}:${{ steps.version.outputs.version }}
           labels: ${{ steps.docker_meta.outputs.labels }}
-          push: true
+          push: ${{ github.event_name != 'pull_request' }}
