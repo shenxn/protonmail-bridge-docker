@@ -21,15 +21,19 @@ check_version() {
     if [[ $VERSION != $CURR_VERSION ]]; then
         echo "New release found: ${CURR_VERSION}"
 
-        # # bump up to new release
-        # echo ${CURR_VERSION} > ${DIR}/VERSION
+        if [[ $IS_PULL_REQUEST == "true" ]]; then
+            echo "Action triggered by pull request. Do not bump version."
+        else
+            # bump up to new release
+            echo ${CURR_VERSION} > ${DIR}/VERSION
 
-        # # commit
-        # git config --local user.email "actions@github.com"
-        # git config --local user.name "Github Action"
-        # git add ${DIR}/VERSION
-        # git commit -m "Bump ${DIR} version to ${CURR_VERSION}" --author="Xiaonan Shen <s@sxn.dev>"
-        # git push
+            # commit
+            git config --local user.email "actions@github.com"
+            git config --local user.name "Github Action"
+            git add ${DIR}/VERSION
+            git commit -m "Bump ${DIR} version to ${CURR_VERSION}" --author="Xiaonan Shen <s@sxn.dev>"
+            git push
+        fi
     else
         echo "Already newest version ${VERSION}"
     fi
