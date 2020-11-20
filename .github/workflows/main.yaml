@@ -12,11 +12,12 @@ on:
       - entrypoint.sh
       - gpgparams
       - install.sh
-      - set-env.sh
       - VERSION
+  pull_request:
 
 env:
   DOCKER_REPO: shenxn/protonmail-bridge
+  DOCKER_REPO_DEV: shenxn/protonmail-bridge-dev
 
 jobs:
   build:
@@ -24,12 +25,29 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@master
-      - name: Set Env
-        run: bash set-env.sh
-      - uses: docker/build-push-action@v1
+      - name: Set version
+        id: version
+        run: echo "::set-output name=version::`cat VERSION`"
+      - name: Set repo
+        id: repo
+        run: if [[ $GITHUB_REF == "refs/heads/master" ]]; then echo "::set-output name=repo::${DOCKER_REPO}"; else echo "::set-output name=repo::${DOCKER_REPO_DEV}"; fi
+      - name: Docker meta
+        id: docker_meta
+        uses: crazy-max/ghaction-docker-meta@v1
+        with:
+          images: ${{ steps.repo.outputs.repo }}
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+      - name: Login to DockerHub
+        uses: docker/login-action@v1
+        if: ${{ github.event_name != 'pull_request' }}
         with:
           username: ${{ secrets.REGISTRY_USERNAME }}
           password: ${{ secrets.REGISTRY_PASSWORD }}
-          repository: shenxn/protonmail-bridge
-          tags: ${{ env.TAGS }}
-          add_git_labels: true
+      - uses: docker/build-push-action@v2
+        with:
+          tags: |
+            ${{ steps.repo.outputs.repo }}:latest
+            ${{ steps.repo.outputs.repo }}:${{ steps.version.outputs.version }}
+          labels: ${{ steps.docker_meta.outputs.labels }}
+          push: ${{ github.event_name != 'pull_request' }}
