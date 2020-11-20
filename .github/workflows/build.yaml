@@ -50,7 +50,7 @@ jobs:
           file: ./build/Dockerfile
           platforms: linux/amd64,linux/arm64/v8,linux/arm/v7
           push: true
-          labels: localhost:5000/protonmail-bridge:latest
+          tags: localhost:5000/protonmail-bridge:latest
       - name: Scan image
         id: scan
         uses: anchore/scan-action@v2
