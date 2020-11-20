@@ -13,17 +13,20 @@ GitHub: [https://github.com/shenxn/protonmail-bridge-docker](https://github.com/
 
 ## ARM Support
 
-We now support ARM devices (arm64 and arm/v7)! Use the images tagged with `build`. See next section for details.
+We now support ARM devices (`arm64` and `arm/v7`)! Use the images tagged with `build`. See next section for details.
 
 ## Tags
 
+There are two types of images.
+ - `deb`: Images based on the official [.deb release](https://protonmail.com/bridge/install). It only supports the `amd64` architecture.
+ - `build`: Images based on the [source code](https://github.com/ProtonMail/proton-bridge). It supports `amd64`, `arm64`, and `arm/v7`. Supporting to more architectures is possible. PRs are welcome.
+
 tag | description
  -- | --
-`latest` | latest image based on [.deb release](https://protonmail.com/bridge/install)
-`[version]` | images based on .deb release
-`build` | latest image built from [source](https://github.com/ProtonMail/proton-bridge)
-`[version]-build` | images built from source
-`dev`, `[version]-dev`, `[version]-build-dev` | images built from dev branch (not recommend)
+`latest` | latest `deb` image
+`[version]` | `deb` images
+`build` | latest `build` image
+`[version]-build` | `build` images
 
 ## Initialization
 
@@ -54,3 +57,12 @@ The bridge currently only supports some of the email clients. More details can b
 ## Bridge CLI Guide
 
 The initialization step exposes the bridge CLI so you can do things like switch between combined and split mode, change proxy, etc. The [official guide](https://protonmail.com/support/knowledge-base/bridge-cli-guide/) gives more information on to use the CLI.
+
+## Build
+
+For anyone who want to build this container on your own (for development or security concerns), here is the guide to do so. First, you need to `cd` into the directory (`deb` or `build`, depending on which type of image you want). Then just run the docker build command
+```
+docker build .
+```
+
+That's it. The `Dockerfile` and bash scripts handle all the downloading, building, and packing. You can also add tags, push to your favorite docker registry, or use `buildx` to build multi architecture images.
