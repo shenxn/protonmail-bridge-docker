@@ -8,6 +8,10 @@ on:
     paths:
       - .github/workflows/update-check.yaml
       - update-check.sh
+  pull_request:
+    paths:
+      - .github/workflows/update-check.yaml
+      - update-check.sh
   schedule:
   - cron: '0 0 * * *'  # runs everyday at midnight
 
@@ -20,4 +24,4 @@ jobs:
       with:
         token: ${{ secrets.PERSONAL_TOKEN }}
     - name: Check Update
-      run: bash update-check.sh
+      run: bash update-check.sh ${{ github.event_name == 'pull_request' }}
