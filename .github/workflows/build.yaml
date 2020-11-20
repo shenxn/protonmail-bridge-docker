@@ -46,6 +46,7 @@ jobs:
           load: true
           labels: protonmail-bridge:latest
       - name: Scan image
+        id: scan
         uses: anchore/scan-action@v2
         with:
           image: protonmail-bridge:latest
