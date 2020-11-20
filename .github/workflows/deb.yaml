@@ -42,7 +42,21 @@ jobs:
         with:
           username: ${{ secrets.REGISTRY_USERNAME }}
           password: ${{ secrets.REGISTRY_PASSWORD }}
-      - uses: docker/build-push-action@v2
+      - name: Build image without push
+        uses: docker/build-push-action@v2
+        with:
+          context: ./deb
+          file: ./deb/Dockerfile
+          load: true
+          tags: protonmail-bridge:latest
+      - name: Scan image
+        uses: anchore/scan-action@v2
+        with:
+          image: protonmail-bridge:latest
+          fail-build: true
+          severity-cutoff: critical
+      - name: Push image
+        uses: docker/build-push-action@v2
         with:
           context: ./deb
           file: ./deb/Dockerfile
