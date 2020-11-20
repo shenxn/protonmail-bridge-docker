@@ -6,28 +6,26 @@ on:
       - master
       - dev
     paths:
-      - .github/workflows/main.yaml
-      - .dockerignore
-      - Dockerfile
-      - entrypoint.sh
-      - gpgparams
-      - install.sh
-      - VERSION
+      - .github/workflows/deb.yaml
+      - deb/*
   pull_request:
+    paths:
+      - .github/workflows/deb.yaml
+      - deb/*
 
 env:
   DOCKER_REPO: shenxn/protonmail-bridge
   DOCKER_REPO_DEV: shenxn/protonmail-bridge-dev
 
 jobs:
-  build:
+  deb:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@master
       - name: Set version
         id: version
-        run: echo "::set-output name=version::`cat VERSION`"
+        run: echo "::set-output name=version::`cat deb/VERSION`"
       - name: Set repo
         id: repo
         run: if [[ $GITHUB_REF == "refs/heads/master" ]]; then echo "::set-output name=repo::${DOCKER_REPO}"; else echo "::set-output name=repo::${DOCKER_REPO_DEV}"; fi
@@ -46,6 +44,8 @@ jobs:
           password: ${{ secrets.REGISTRY_PASSWORD }}
       - uses: docker/build-push-action@v2
         with:
+          context: ./deb
+          file: ./deb/Dockerfile
           tags: |
             ${{ steps.repo.outputs.repo }}:latest
             ${{ steps.repo.outputs.repo }}:${{ steps.version.outputs.version }}
