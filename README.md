@@ -47,6 +47,10 @@ docker run -d --name=protonmail-bridge -v protonmail:/root -p 1025:25/tcp -p 114
 
 If you want to run this image in a Kubernetes environment, [#6](https://github.com/shenxn/protonmail-bridge-docker/issues/6) can be helpful.
 
-## Compatability
+## Compatibility
 
 The bridge currently only supports some of the email clients. More details can be found on the official website. I've tested this on a Synology DiskStation and it runs well. However, you may need ssh onto it to run the interactive docker command to add your account. The main reason of using this instead of environment variables is that it seems to be the best way to support two-factor authentication.
+
+## Bridge CLI Guide
+
+The initialization step exposes the bridge CLI so you can do things like switch between combined and split mode, change proxy, etc. The [official guide](https://protonmail.com/support/knowledge-base/bridge-cli-guide/) gives more information on to use the CLI.
