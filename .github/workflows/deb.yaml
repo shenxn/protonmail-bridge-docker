@@ -15,7 +15,7 @@ on:
 
 env:
   DOCKER_REPO: shenxn/protonmail-bridge
-  DOCKER_REPO_DEV: shenxn/protonmail-bridge-dev
+  DOCKER_REPO_DEV: ghcr.io/shenxn/protonmail-bridge-dev
 
 jobs:
   deb:
@@ -57,10 +57,17 @@ jobs:
           sarif_file: ${{ steps.scan.outputs.sarif }}
       - name: Login to DockerHub
         uses: docker/login-action@v1
-        if: ${{ github.event_name != 'pull_request' }}
+        if: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/master' }}
         with:
           username: ${{ secrets.REGISTRY_USERNAME }}
           password: ${{ secrets.REGISTRY_PASSWORD }}
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v1
+        if: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/dev' }}
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.CR_PAT }}
       - name: Push image
         uses: docker/build-push-action@v2
         with:
