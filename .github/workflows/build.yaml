@@ -83,7 +83,7 @@ jobs:
         with:
           context: ./build
           file: ./build/Dockerfile
-          platforms: linux/amd64,linux/arm64/v8,linux/arm/v7
+          platforms: linux/amd64,linux/arm64/v8
           tags: |
             ${{ steps.repo.outputs.repo }}:build
             ${{ steps.repo.outputs.repo }}:${{ steps.version.outputs.version }}-build
