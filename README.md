@@ -12,6 +12,10 @@ Docker Hub: [https://hub.docker.com/r/shenxn/protonmail-bridge](https://hub.dock
 
 GitHub: [https://github.com/shenxn/protonmail-bridge-docker](https://github.com/shenxn/protonmail-bridge-docker)
 
+## ARMv7 Builds
+
+Currently there is a problem building the new parser targeting 32-bit architectures (i.e. `arm/v7`). The latest working build is `1.4.5-build`. Therefore, if you are using an `arm/v7` device like Raspberry Pi, do not upgrade to newer version. More information about the problem can be found [here](https://www.reddit.com/r/ProtonMail/comments/jvzm12/issue_building_bridge_150/). If you have any idea on how to fix this, a PR is welcome.
+
 ## ARM Support
 
 We now support ARM devices (`arm64` and `arm/v7`)! Use the images tagged with `build`. See next section for details.
