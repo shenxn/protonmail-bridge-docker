@@ -15,15 +15,15 @@ apt-get install -y wget binutils xz-utils
 # Repack deb (remove unnecessary dependencies)
 mkdir deb
 cd deb
-wget https://protonmail.com/download/${DEB_FILE}
+wget -q https://protonmail.com/download/${DEB_FILE}
 ar x -v ${DEB_FILE}
 mkdir control
-tar xvfJ control.tar.xz -C control
-sed -i "s/^Depends: .*$/Depends: libsecret-1-0, libgl1-mesa-glx/" control/control
+tar zxvf control.tar.gz -C control
+sed -i "s/^Depends: .*$/Depends: libgl1, libc6, libsecret-1-0, libstdc++6, libgcc1/" control/control
 cd control
-tar cvfJ ../control.tar.xz .
+tar zcvf ../control.tar.gz .
 cd ../
-ar rcs -v ${DEB_FILE} debian-binary control.tar.xz data.tar.xz
+ar rcs -v ${DEB_FILE} debian-binary control.tar.gz data.tar.gz
 cd ../
 
 # Install protonmail bridge
