@@ -16,6 +16,7 @@ on:
 env:
   DOCKER_REPO: shenxn/protonmail-bridge
   DOCKER_REPO_DEV: ghcr.io/shenxn/protonmail-bridge-dev
+  PLATFORMS: linux/amd64,linux/arm64/v8
 
 jobs:
   build:
@@ -45,12 +46,12 @@ jobs:
         uses: docker/setup-buildx-action@v1
         with:
           driver-opts: network=host
-      - name: Build image without push to DockerHub
+      - name: Build image without push to registry
         uses: docker/build-push-action@v2
         with:
           context: ./build
           file: ./build/Dockerfile
-          platforms: linux/amd64,linux/arm64/v8,linux/arm/v7
+          platforms: ${{ env.PLATFORMS }}
           push: true
           tags: localhost:5000/protonmail-bridge:latest
       - name: Scan image
@@ -83,7 +84,7 @@ jobs:
         with:
           context: ./build
           file: ./build/Dockerfile
-          platforms: linux/amd64,linux/arm64/v8
+          platforms: ${{ env.PLATFORMS }}
           tags: |
             ${{ steps.repo.outputs.repo }}:build
             ${{ steps.repo.outputs.repo }}:${{ steps.version.outputs.version }}-build
