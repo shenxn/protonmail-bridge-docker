@@ -59,6 +59,6 @@ response = requests.get(
     headers={"Accept": "application/vnd.github.v3+json"},
     )
 tags = json.loads(response.content)
-version_re = re.compile("v(\d+)\.(\d+)\.(\d+)")
-releases = [tag["name"] for tag in tags if version_re.match(tag["name"])]
+version_re = re.compile("v\d+\.\d+\.\d+")
+releases = [tag["name"][1:] for tag in tags if version_re.match(tag["name"])]
 check_version("build", releases[0])
