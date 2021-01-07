@@ -29,7 +29,7 @@ def check_version(directory, new_version):
             f.write(new_version)
         # commit
         result = os.system(f"git config --local user.email 'actions@github.com' \
-            && git config --local user.name 'Github Action' \
+            && git config --local user.name 'GitHub Actions' \
             && git add {directory}/VERSION \
             && git commit -m 'Bump {directory} version to {new_version}'")
         if result != 0:
