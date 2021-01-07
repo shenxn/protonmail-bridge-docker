@@ -7,7 +7,7 @@ DEB_FILE=protonmail-bridge_${VERSION}_amd64.deb
 
 # Install dependents
 apt-get update
-apt-get install -y --no-install-recommends socat pass
+apt-get install -y --no-install-recommends socat pass ca-certificates
 
 # Build time dependencies
 apt-get install -y wget binutils xz-utils
