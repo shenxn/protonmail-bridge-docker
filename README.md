@@ -51,6 +51,16 @@ To run the container, use the following command.
 docker run -d --name=protonmail-bridge -v protonmail:/root -p 1025:25/tcp -p 1143:143/tcp --restart=unless-stopped shenxn/protonmail-bridge
 ```
 
+## Security
+
+Please be aware that running the command above will expose your bridge to the network. Remember to use firewall if you are going to run this in an untrusted network or on a machine that has public IP address. You can also use the following command to publish the port to only localhost, which is the same behavior as the official bridge package.
+
+```
+docker run -d --name=protonmail-bridge -v protonmail:/root -p 127.0.0.1:1025:25/tcp -p 127.0.0.1:1143:143/tcp --restart=unless-stopped shenxn/protonmail-bridge
+```
+
+Besides, you can publish only port 25 (SMTP) if you don't need to receive any email (e.g. as a email notification service).
+
 ## Kubernetes
 
 If you want to run this image in a Kubernetes environment, [#6](https://github.com/shenxn/protonmail-bridge-docker/issues/6) can be helpful.
