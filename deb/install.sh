@@ -15,7 +15,7 @@ apt-get install -y wget binutils xz-utils
 # Repack deb (remove unnecessary dependencies)
 mkdir deb
 cd deb
-wget -q https://protonmail.com/download/${DEB_FILE}
+wget -q https://protonmail.com/download/bridge/${DEB_FILE}
 ar x -v ${DEB_FILE}
 mkdir control
 tar zxvf control.tar.gz -C control
