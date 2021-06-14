@@ -26,28 +26,39 @@ There are two types of images.
  - `deb`: Images based on the official [.deb release](https://protonmail.com/bridge/install). It only supports the `amd64` architecture.
  - `build`: Images based on the [source code](https://github.com/ProtonMail/proton-bridge). It supports `amd64`, `arm64`, and `arm/v7`. Supporting to more architectures is possible. PRs are welcome.
 
-tag | description
- -- | --
-`latest` | latest `deb` image
-`[version]` | `deb` images
-`build` | latest `build` image
-`[version]-build` | `build` images
+| tag               | description          |
+| ----------------- | -------------------- |
+| `latest`          | latest `deb` image   |
+| `[version]`       | `deb` images         |
+| `build`           | latest `build` image |
+| `[version]-build` | `build` images       |
+
+## Environment Variables for images with `build` in tag
+
+| Name                  | Description                                                                         | Default Value |
+| --------------------- | ----------------------------------------------------------------------------------- | ------------- |
+| `PROTONMAIL_USERNAME` | your protonmail account username                                                    | (not set)     |
+| `PROTONMAIL_PASSWORD` | the password for your protonmail account                                            | (not set)     |
+| `MASTER_PASSWORD`     | the master password for the internal password manager required by protonmail-bridge | `pass-key`    |
+| `GNUPGHOME`           | change the defulat `/root/.gnupg` to this directory as a workaround for gpg error   | `/tmp/gnupg`  |
 
 ## Initialization
 
 To initialize and add account to the bridge, run the following command.
 
-```
+```bash
 docker run --rm -it -v protonmail:/root shenxn/protonmail-bridge init
 ```
 
 Wait for the bridge to startup, use `login` command and follow the instructions to add your account into the bridge. Then use `info` to see the configuration information (username and password). After that, use `exit` to exit the bridge. You may need `CTRL+C` to exit the docker entirely.
 
+__NOTE:__ If you have `PROTONMAIL_USERNAME` and `PROTONMAIL_PASSWORD` set for `docker run` with `-e`, the login process will finish automatically.
+
 ## Run
 
 To run the container, use the following command.
 
-```
+```bash
 docker run -d --name=protonmail-bridge -v protonmail:/root -p 1025:25/tcp -p 1143:143/tcp --restart=unless-stopped shenxn/protonmail-bridge
 ```
 
@@ -61,7 +72,7 @@ If you don't want to use Helm, you can also reference to the guide ([#6](https:/
 
 Please be aware that running the command above will expose your bridge to the network. Remember to use firewall if you are going to run this in an untrusted network or on a machine that has public IP address. You can also use the following command to publish the port to only localhost, which is the same behavior as the official bridge package.
 
-```
+```bash
 docker run -d --name=protonmail-bridge -v protonmail:/root -p 127.0.0.1:1025:25/tcp -p 127.0.0.1:1143:143/tcp --restart=unless-stopped shenxn/protonmail-bridge
 ```
 

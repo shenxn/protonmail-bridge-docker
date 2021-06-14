@@ -1,0 +1,55 @@
+#!/usr/bin/expect -f
+
+set timeout 15;
+
+spawn {*}$argv ;
+
+# wait for inital prompt
+expect {
+  ">>> " {
+    # protonmail-bridge started without error, do nothing
+  }
+
+  timeout {
+    exit 2
+  }
+}
+
+send -- "login\r"
+expect {
+  "Username: " {
+    # login start, enter username
+  }
+
+  timeout {
+    exit 2
+  }
+}
+
+send -- "$env(PROTONMAIL_USERNAME)\r"
+expect {
+  "Password: " {
+    # username entered, enter password
+  }
+
+  timeout {
+    exit 2
+  }
+}
+
+send -- "$env(PROTONMAIL_PASSWORD)\r"
+expect {
+  "was added successfully." {
+    # login ok
+    exit 0
+  }
+
+  "Server error" {
+    # login failed
+    exit 1
+  }
+
+  timeout {
+    exit 2
+  }
+}
