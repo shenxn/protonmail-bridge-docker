@@ -15,7 +15,7 @@ expect {
   }
 }
 
-send -- "login\r"
+send "login\r"
 expect {
   "Username: " {
     # login start, enter username
@@ -26,7 +26,7 @@ expect {
   }
 }
 
-send -- "$env(PROTONMAIL_USERNAME)\r"
+send "$env(PROTONMAIL_USERNAME)\r"
 expect {
   "Password: " {
     # username entered, enter password
@@ -37,7 +37,10 @@ expect {
   }
 }
 
-send -- "$env(PROTONMAIL_PASSWORD)\r"
+stty -echo
+sleep 1
+send "$env(PROTONMAIL_PASSWORD)\r"
+stty echo
 expect {
   "was added successfully." {
     # login ok
