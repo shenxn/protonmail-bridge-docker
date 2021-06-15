@@ -35,12 +35,12 @@ There are two types of images.
 
 ## Environment Variables for images with `build` in tag
 
-| Name                  | Description                                                                         | Default Value |
-| --------------------- | ----------------------------------------------------------------------------------- | ------------- |
-| `PROTONMAIL_USERNAME` | your protonmail account username                                                    | (not set)     |
-| `PROTONMAIL_PASSWORD` | the password for your protonmail account                                            | (not set)     |
-| `MASTER_PASSWORD`     | the master password for the internal password manager required by protonmail-bridge | `pass-key`    |
-| `GNUPGHOME`           | change the defulat `/root/.gnupg` to this directory as a workaround for gpg error   | `/tmp/gnupg`  |
+| Name                  | Description                                                                       | Default Value |
+| --------------------- | --------------------------------------------------------------------------------- | ------------- |
+| `PROTONMAIL_USERNAME` | your protonmail account username                                                  | (not set)     |
+| `PROTONMAIL_PASSWORD` | the password for your protonmail account                                          | (not set)     |
+| `KEY_ID`              | the pgp-id for the internal password manager required by protonmail-bridge        | `pass-key`    |
+| `GNUPGHOME`           | change the defulat `/root/.gnupg` to this directory as a workaround for gpg error | `/tmp/gnupg`  |
 
 ## Initialization
 

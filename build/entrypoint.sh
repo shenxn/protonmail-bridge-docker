@@ -20,7 +20,7 @@ if [[ $1 == init ]]; then
 
     # Initialize pass
     gpg --generate-key --batch /protonmail/gpgparams
-    pass init "${MASTER_PASSWORD:-"pass-key"}"
+    pass init "${KEY_ID:-"pass-key"}"
 
     # Login
     do_login="/protonmail/proton-bridge --cli $*"
