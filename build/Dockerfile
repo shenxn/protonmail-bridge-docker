@@ -1,4 +1,4 @@
-FROM golang:1.13 AS build
+FROM golang:1.16 AS build
 
 # Install dependencies
 RUN apt-get update && apt-get install -y libsecret-1-dev
@@ -16,13 +16,16 @@ EXPOSE 143/tcp
 
 # Install dependencies and protonmail bridge
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends socat pass libsecret-1-0 ca-certificates \
+    && apt-get install -y --no-install-recommends \
+        expect socat pass libsecret-1-0 ca-certificates \
     && rm -rf /var/lib/apt/lists/*
-
-# Copy bash scripts
-COPY gpgparams entrypoint.sh /protonmail/
 
 # Copy protonmail
 COPY --from=build /build/proton-bridge/proton-bridge /protonmail/
+
+# Copy bash scripts
+COPY gpgparams entrypoint.sh login.exp /protonmail/
+
+RUN chmod +x /protonmail/login.exp
 
 ENTRYPOINT ["bash", "/protonmail/entrypoint.sh"]
