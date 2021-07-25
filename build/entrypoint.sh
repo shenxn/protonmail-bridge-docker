@@ -2,6 +2,11 @@
 
 set -ex
 
+id
+# Go to current user's homedir
+cd
+echo $PWD
+
 # Initialize
 if [[ $1 == init ]]; then
 
