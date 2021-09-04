@@ -28,4 +28,11 @@ COPY gpgparams entrypoint.sh login.exp /protonmail/
 
 RUN chmod +x /protonmail/login.exp
 
+# Add a user 'protonmail' with UID 8535
+RUN useradd -u 8535 -d /home/protonmail protonmail \
+    && mkdir -p /home/protonmail \
+    && chown protonmail: /home/protonmail
+# change to non-privileged user for extra security
+USER protonmail
+
 ENTRYPOINT ["bash", "/protonmail/entrypoint.sh"]
