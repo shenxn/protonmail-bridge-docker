@@ -23,6 +23,7 @@ RUN apt-get update \
 COPY gpgparams entrypoint.sh /protonmail/
 
 # Copy protonmail
+COPY --from=build /build/proton-bridge/bridge /protonmail/
 COPY --from=build /build/proton-bridge/proton-bridge /protonmail/
 
 ENTRYPOINT ["bash", "/protonmail/entrypoint.sh"]
