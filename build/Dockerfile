@@ -1,14 +1,15 @@
-FROM golang:1.15 AS build
+# Use carlosedp/golang for riscv64 support
+FROM carlosedp/golang:1.18 AS build
 
 # Install dependencies
-RUN apt-get update && apt-get install -y libsecret-1-dev
+RUN apt-get update && apt-get install -y git build-essential libsecret-1-dev
 
 # Build
 WORKDIR /build/
 COPY build.sh VERSION /build/
 RUN bash build.sh
 
-FROM ubuntu:bionic
+FROM ubuntu:focal
 LABEL maintainer="Xiaonan Shen <s@sxn.dev>"
 
 EXPOSE 25/tcp
@@ -23,6 +24,7 @@ RUN apt-get update \
 COPY gpgparams entrypoint.sh /protonmail/
 
 # Copy protonmail
+COPY --from=build /build/proton-bridge/bridge /protonmail/
 COPY --from=build /build/proton-bridge/proton-bridge /protonmail/
 
 # Add a user 'protonmail' with UID 8535
