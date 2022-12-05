@@ -1,0 +1,15 @@
+services:
+  protonmail-bridge:
+    image: shenxn/protonmail-bridge
+    # build:
+    #  context: ./build
+    #  dockerfile: Dockerfile
+    container_name: pm_bridge
+    ports:
+      - 1025:25/tcp
+      - 1143:143/tcp
+    volumes:
+      - protonmail:/root
+    restart: unless-stopped
+    stdin_open: true 
+    tty: true
