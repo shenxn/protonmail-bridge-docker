@@ -2,10 +2,9 @@
 
 set -ex
 
-id
 # Go to current user's homedir
 cd
-echo $PWD
+echo "Running as user '$USER' (UID '$UID') in '$PWD'"
 
 # Initialize
 if [[ $1 == init ]]; then
