@@ -7,6 +7,8 @@ services:
     #  context: ./build
     #  dockerfile: Dockerfile
     container_name: pm_bridge
+    volumes:
+      - protonmail:/root
     ports:
       - 1025:25/tcp
       - 1143:143/tcp
