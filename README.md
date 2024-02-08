@@ -37,7 +37,13 @@ To initialize and add account to the bridge, run the following command.
 docker run --rm -it -v protonmail:/root shenxn/protonmail-bridge init
 ```
 
-Wait for the bridge to startup, use `login` command and follow the instructions to add your account into the bridge. Then use `info` to see the configuration information (username and password). After that, use `exit` to exit the bridge. You may need `CTRL+C` to exit the docker entirely.
+If you want to use Docker Compose instead, you can create a copy of the provided example [docker-compose.yml](docker-compose.yml) file, modify it to suit your needs, and then run the following command:
+
+```
+docker compose run protonmail-bridge init
+```
+
+Wait for the bridge to startup, then you will see a prompt appear for [Proton Mail Bridge interactive shell](https://proton.me/support/bridge-cli-guide). Use the `login` command and follow the instructions to add your account into the bridge. Then use `info` to see the configuration information (username and password). After that, use `exit` to exit the bridge. You may need `CTRL+C` to exit the docker entirely.
 
 ## Run
 
@@ -45,6 +51,12 @@ To run the container, use the following command.
 
 ```
 docker run -d --name=protonmail-bridge -v protonmail:/root -p 1025:25/tcp -p 1143:143/tcp --restart=unless-stopped shenxn/protonmail-bridge
+```
+
+Or, if using Docker Compose, use the following command.
+
+```
+docker compose up -d
 ```
 
 ## Kubernetes
