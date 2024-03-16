@@ -14,7 +14,7 @@ on:
       - .github/workflows/build.yaml
       - build/*
       - deb/*
-  workflow_run:
+  workflow_dispatch:
 
 env:
   DOCKER_REPO: shenxn/protonmail-bridge
