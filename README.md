@@ -100,5 +100,5 @@ docker run -d --name=protonmail-bridge -v protonmail:/root -e cache_enabled=true
 
 **variable**|**description**|**default**
 -- | -- | --
-cache_enabled|Controls if the mail cache is enabled in the prefs.json file.|false
+cache_enabled|Controls if the mail cache is enabled in the prefs.json file.|true
 
