@@ -3,8 +3,10 @@
 set -ex
 
 # Modify prefs.json
-if [[ $cache_enabled == true ]]; then
-    sed -i 's/"cache_enabled": "true"/"cache_enabled": "false"/' /root/.config/protonmail/bridge/prefs.json
+if [[ $cache_enabled == "false" ]]; then
+    sed -Ei 's/"cache_enabled": ".+"/"cache_enabled": "false"/' /root/.config/protonmail/bridge/prefs.json
+else
+    sed -Ei 's/"cache_enabled": ".+"/"cache_enabled": "true"/' /root/.config/protonmail/bridge/prefs.json
 fi
 
 # Initialize
