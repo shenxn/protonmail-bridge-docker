@@ -93,7 +93,7 @@ docker build .
 That's it. The `Dockerfile` and bash scripts handle all the downloading, building, and packing. You can also add tags, push to your favorite docker registry, or use `buildx` to build multi architecture images.
 
 ## Environment variables
-Environment variables can be set in the docker-compose.yaml file or in the command line using `-e $variable_name=true`.
+Environment variables can be set in the docker-compose.yaml file or in the command line using `-e variable_name=true`.
 ```
 docker run -d --name=protonmail-bridge -v protonmail:/root -e cache_enabled=false shenxn/protonmail-bridge
 ```
