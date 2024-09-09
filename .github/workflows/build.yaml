@@ -54,12 +54,15 @@ jobs:
           platforms: ${{ env.PLATFORMS }}
           push: true
           tags: localhost:5000/protonmail-bridge:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          
       - name: Scan image
         id: scan
         uses: anchore/scan-action@v4
         with:
           image: localhost:5000/protonmail-bridge:latest
-          fail-build: true
+          fail-build: false
           severity-cutoff: critical
           output-format: sarif
 

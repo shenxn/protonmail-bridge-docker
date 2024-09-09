@@ -1,27 +1,58 @@
-# Use carlosedp/golang for riscv64 support
-FROM golang:1.21-bookworm AS build
+FROM golang:1.23 AS build
 
 # Install dependencies
-RUN apt-get update && apt-get install -y git build-essential libsecret-1-dev
+# RUN apt-get update && apt-get install -y git build-essential libsecret-1-dev
+
+RUN --mount=target=/var/lib/apt/lists,type=cache,sharing=locked \
+    --mount=target=/var/cache/apt,type=cache,sharing=locked \
+    rm -f /etc/apt/apt.conf.d/docker-clean \
+    && apt-get update \
+    && apt-get upgrade -y \
+    && apt-get -y --no-install-recommends install \
+        libc6 \
+        socat \
+        pass \
+        ca-certificates \
+        wget \
+        binutils \
+        xz-utils \
+        libsecret-1-0 \
+        libgl1
 
 # Build
 WORKDIR /build/
 COPY build.sh VERSION /build/
-RUN bash build.sh
+RUN --mount=type=cache,target=/root/.cache/go-build bash build.sh
 
-FROM ubuntu:jammy
+FROM ubuntu:noble
 LABEL maintainer="Xiaonan Shen <s@sxn.dev>"
 
 EXPOSE 25/tcp
 EXPOSE 143/tcp
 
 # Install dependencies and protonmail bridge
+# RUN --mount=target=/var/lib/apt/lists,type=cache,sharing=locked \
+#     --mount=target=/var/cache/apt,type=cache,sharing=locked \
+#     rm -f /etc/apt/apt.conf.d/docker-clean \
+#     && apt-get update \
+#     && apt-get -y --no-install-recommends install \
+#         libc6 socat pass libsecret-1-0 ca-certificates
+
 RUN --mount=target=/var/lib/apt/lists,type=cache,sharing=locked \
     --mount=target=/var/cache/apt,type=cache,sharing=locked \
     rm -f /etc/apt/apt.conf.d/docker-clean \
     && apt-get update \
+    && apt-get upgrade -y \
     && apt-get -y --no-install-recommends install \
-        libc6 socat pass libsecret-1-0 ca-certificates
+        libc6 \
+        socat \
+        pass \
+        ca-certificates \
+        wget \
+        binutils \
+        xz-utils \
+        libsecret-1-0 \
+        libgl1
 
 # Copy bash scripts
 COPY gpgparams entrypoint.sh /protonmail/

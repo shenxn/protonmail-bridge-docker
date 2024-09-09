@@ -21,7 +21,5 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v4
-      with:
-        token: ${{ secrets.PERSONAL_TOKEN }}
     - name: Check Update
       run: python3 update-check.py ${{ github.event_name == 'pull_request' }}
