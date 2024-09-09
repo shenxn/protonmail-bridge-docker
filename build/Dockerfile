@@ -1,5 +1,5 @@
 # Use carlosedp/golang for riscv64 support
-FROM carlosedp/golang:1.18 AS build
+FROM golang:1.21-bookworm AS build
 
 # Install dependencies
 RUN apt-get update && apt-get install -y git build-essential libsecret-1-dev
@@ -16,9 +16,12 @@ EXPOSE 25/tcp
 EXPOSE 143/tcp
 
 # Install dependencies and protonmail bridge
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends socat pass libsecret-1-0 ca-certificates \
-    && rm -rf /var/lib/apt/lists/*
+RUN --mount=target=/var/lib/apt/lists,type=cache,sharing=locked \
+    --mount=target=/var/cache/apt,type=cache,sharing=locked \
+    rm -f /etc/apt/apt.conf.d/docker-clean \
+    && apt-get update \
+    && apt-get -y --no-install-recommends install \
+        libc6 socat pass libsecret-1-0 ca-certificates
 
 # Copy bash scripts
 COPY gpgparams entrypoint.sh /protonmail/
