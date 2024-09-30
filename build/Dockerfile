@@ -16,7 +16,7 @@ RUN --mount=target=/var/lib/apt/lists,type=cache,sharing=locked \
         wget \
         binutils \
         xz-utils \
-        libsecret-1-0 \
+        libsecret-1-dev \
         libgl1
 
 # Build
@@ -38,21 +38,21 @@ EXPOSE 143/tcp
 #     && apt-get -y --no-install-recommends install \
 #         libc6 socat pass libsecret-1-0 ca-certificates
 
-RUN --mount=target=/var/lib/apt/lists,type=cache,sharing=locked \
-    --mount=target=/var/cache/apt,type=cache,sharing=locked \
-    rm -f /etc/apt/apt.conf.d/docker-clean \
-    && apt-get update \
-    && apt-get upgrade -y \
-    && apt-get -y --no-install-recommends install \
-        libc6 \
-        socat \
-        pass \
-        ca-certificates \
-        wget \
-        binutils \
-        xz-utils \
-        libsecret-1-0 \
-        libgl1
+# RUN --mount=target=/var/lib/apt/lists,type=cache,sharing=locked \
+#     --mount=target=/var/cache/apt,type=cache,sharing=locked \
+#     rm -f /etc/apt/apt.conf.d/docker-clean \
+#     && apt-get update \
+#     && apt-get upgrade -y \
+#     && apt-get -y --no-install-recommends install \
+#         libc6 \
+#         socat \
+#         pass \
+#         ca-certificates \
+#         wget \
+#         binutils \
+#         xz-utils \
+#         libsecret-1-dev \
+#         libgl1
 
 # Copy bash scripts
 COPY gpgparams entrypoint.sh /protonmail/

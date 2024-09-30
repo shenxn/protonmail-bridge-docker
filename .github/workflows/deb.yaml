@@ -16,10 +16,16 @@ on:
 env:
   DOCKER_REPO: shenxn/protonmail-bridge
   DOCKER_REPO_DEV: ghcr.io/shenxn/protonmail-bridge-dev
+  PLATFORMS: linux/amd64,linux/arm64/v8,linux/arm/v7,linux/riscv64
 
 jobs:
   deb:
     runs-on: ubuntu-latest
+    services:
+      registry:
+        image: registry:2
+        ports:
+          - 5000:5000
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -36,22 +42,25 @@ jobs:
           images: ${{ steps.repo.outputs.repo }}
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
+        with:
+          driver-opts: network=host
 
       - name: Build image without push
         uses: docker/build-push-action@v6
         with:
           context: ./deb
           file: ./deb/Dockerfile
-          load: true
-          tags: protonmail-bridge:latest
+          push: true
+          tags: localhost:5000/protonmail-bridge:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
+          platforms: ${{ env.PLATFORMS }}
 
       - name: Scan image
         id: scan
         uses: anchore/scan-action@v4
         with:
-          image: protonmail-bridge:latest
+          image: localhost:5000/protonmail-bridge:latest
           fail-build: false
           severity-cutoff: critical
           output-format: sarif
@@ -80,5 +89,8 @@ jobs:
           tags: |
             ${{ steps.repo.outputs.repo }}:latest
             ${{ steps.repo.outputs.repo }}:${{ steps.version.outputs.version }}
+          platforms: ${{ env.PLATFORMS }}
           labels: ${{ steps.docker_meta.outputs.labels }}
           push: ${{ github.event_name != 'pull_request' }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

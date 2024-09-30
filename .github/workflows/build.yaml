@@ -16,7 +16,7 @@ on:
 env:
   DOCKER_REPO: shenxn/protonmail-bridge
   DOCKER_REPO_DEV: ghcr.io/shenxn/protonmail-bridge-dev
-  PLATFORMS: linux/amd64,linux/arm64/v8,linux/arm/v7,linux/riscv64
+  PLATFORMS: linux/amd64,linux/arm64/v8,linux/arm/v7
 
 jobs:
   build:
@@ -94,3 +94,5 @@ jobs:
             ${{ steps.repo.outputs.repo }}:${{ steps.version.outputs.version }}-build
           labels: ${{ steps.docker_meta.outputs.labels }}
           push: ${{ github.event_name != 'pull_request' }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
