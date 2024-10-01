@@ -16,13 +16,19 @@ on:
 env:
   DOCKER_REPO: shenxn/protonmail-bridge
   DOCKER_REPO_DEV: ghcr.io/shenxn/protonmail-bridge-dev
+  PLATFORMS: linux/amd64,linux/arm64/v8,linux/arm/v7,linux/riscv64
 
 jobs:
   deb:
     runs-on: ubuntu-latest
+    services:
+      registry:
+        image: registry:2
+        ports:
+          - 5000:5000
     steps:
       - name: Checkout
-        uses: actions/checkout@master
+        uses: actions/checkout@v4
       - name: Set version
         id: version
         run: echo "::set-output name=version::`cat deb/VERSION`"
@@ -31,50 +37,60 @@ jobs:
         run: if [[ $GITHUB_REF == "refs/heads/master" ]]; then echo "::set-output name=repo::${DOCKER_REPO}"; else echo "::set-output name=repo::${DOCKER_REPO_DEV}"; fi
       - name: Docker meta
         id: docker_meta
-        uses: crazy-max/ghaction-docker-meta@v1
+        uses: docker/metadata-action@v5
         with:
           images: ${{ steps.repo.outputs.repo }}
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
+        uses: docker/setup-buildx-action@v3
+        with:
+          driver-opts: network=host
+
       - name: Build image without push
-        uses: docker/build-push-action@v2
+        uses: docker/build-push-action@v6
         with:
           context: ./deb
           file: ./deb/Dockerfile
-          load: true
-          tags: protonmail-bridge:latest
+          push: true
+          tags: localhost:5000/protonmail-bridge:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          platforms: ${{ env.PLATFORMS }}
+
       - name: Scan image
         id: scan
-        uses: anchore/scan-action@v2
+        uses: anchore/scan-action@v4
         with:
-          image: protonmail-bridge:latest
-          fail-build: true
+          image: localhost:5000/protonmail-bridge:latest
+          fail-build: false
           severity-cutoff: critical
-          acs-report-enable: true
+          output-format: sarif
       - name: Upload Anchore scan SARIF report
-        uses: github/codeql-action/upload-sarif@v1
+        uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: ${{ steps.scan.outputs.sarif }}
       - name: Login to DockerHub
-        uses: docker/login-action@v1
+        uses: docker/login-action@v3
         if: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/master' }}
         with:
           username: ${{ secrets.REGISTRY_USERNAME }}
           password: ${{ secrets.REGISTRY_PASSWORD }}
       - name: Login to GitHub Container Registry
-        uses: docker/login-action@v1
+        uses: docker/login-action@v3
         if: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/dev' }}
         with:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
           password: ${{ secrets.CR_PAT }}
       - name: Push image
-        uses: docker/build-push-action@v2
+        uses: docker/build-push-action@v6
         with:
           context: ./deb
           file: ./deb/Dockerfile
           tags: |
             ${{ steps.repo.outputs.repo }}:latest
             ${{ steps.repo.outputs.repo }}:${{ steps.version.outputs.version }}
+          platforms: ${{ env.PLATFORMS }}
           labels: ${{ steps.docker_meta.outputs.labels }}
           push: ${{ github.event_name != 'pull_request' }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

@@ -1,8 +1,24 @@
-FROM ubuntu:jammy
+FROM --platform=${BUILDPLATFORM} ubuntu:noble
 LABEL maintainer="Xiaonan Shen <s@sxn.dev>"
 
 EXPOSE 25/tcp
 EXPOSE 143/tcp
+
+RUN --mount=target=/var/lib/apt/lists,type=cache,sharing=locked \
+    --mount=target=/var/cache/apt,type=cache,sharing=locked \
+    rm -f /etc/apt/apt.conf.d/docker-clean \
+    && apt-get update \
+    && apt-get upgrade -y \
+    && apt-get -y --no-install-recommends install \
+        libc6 \
+        socat \
+        pass \
+        ca-certificates \
+        wget \
+        binutils \
+        xz-utils \
+        libsecret-1-0 \
+        libgl1
 
 WORKDIR /protonmail
 
