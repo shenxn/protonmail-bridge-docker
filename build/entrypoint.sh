@@ -2,6 +2,16 @@
 
 set -ex
 
+# Modify prefs.json
+if [[ $cache_enabled == "false" ]]; then
+    sed -Ei 's/"cache_enabled": ".+"/"cache_enabled": "false"/' /root/.config/protonmail/bridge/prefs.json
+    echo "entrypoint.sh: cache disabled"
+    echo "- deleting cache.."; rm -rf "/root/.config/protonmail/bridge/cache/*/messages/*" && echo "- .. done!" || echo "- .. failed to delete cache!"
+elif [[ $cache_enabled == "true" ]]; then
+    sed -Ei 's/"cache_enabled": ".+"/"cache_enabled": "true"/' /root/.config/protonmail/bridge/prefs.json
+    echo "entrypoint.sh: cache enabled"
+fi
+
 # Initialize
 if [[ $1 == init ]]; then
 
