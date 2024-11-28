@@ -1,8 +1,15 @@
 # Use carlosedp/golang for riscv64 support
-FROM carlosedp/golang:1.18 AS build
+FROM ubuntu:jammy AS build
 
 # Install dependencies
-RUN apt-get update && apt-get install -y git build-essential libsecret-1-dev
+RUN apt-get update && apt-get install -y git build-essential libsecret-1-dev curl
+
+ARG GO_VERSION=1.22.0
+RUN ARCH=$(uname -m) && \
+    if [ "${ARCH}" = "x86_64" ]; then ARCH="amd64"; fi && \
+    curl -sL https://go.dev/dl/go${GO_VERSION}.linux-${ARCH}.tar.gz \
+    | tar -C /usr/local -xzf -
+ENV PATH=/usr/local/go/bin:${PATH}
 
 # Build
 WORKDIR /build/
