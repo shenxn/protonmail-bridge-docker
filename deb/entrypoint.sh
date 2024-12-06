@@ -41,7 +41,7 @@ else
     find $HOME | grep -q . || echo "No files found - start the container with the init command, or copy/mount files into it at $HOME first. Sleeping 5 minutes before exiting so you have time to copy the files over." && sleep 300 && exit 1
     # give friendly error if the user doesn't own the data
     if [[ $(id -u) != 0 ]]; then
-        find $HOME -not -user $(id -u) | grep -q . || echo "You do not own the data in $HOME. Please chown it to $(id -u), run the container as the owner of the data or run the container as root." && exit 1
+        find $HOME/.* -not -user $(id -u) | grep -q . || echo "You do not own the data in $HOME. Please chown it to $(id -u), run the container as the owner of the data or run the container as root." && exit 1
     fi
 
     # socat will make the conn appear to come from 127.0.0.1
