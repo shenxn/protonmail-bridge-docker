@@ -15,8 +15,8 @@ LABEL maintainer="Xiaonan Shen <s@sxn.dev>"
 EXPOSE 25/tcp
 EXPOSE 143/tcp
 
-EXPOSE 1025/tcp
-EXPOSE 1143/tcp
+EXPOSE 2025/tcp
+EXPOSE 2143/tcp
 
 # Install dependencies and protonmail bridge
 RUN apt-get update \
