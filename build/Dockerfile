@@ -11,8 +11,12 @@ RUN bash build.sh
 FROM debian:sid-slim
 LABEL maintainer="Xiaonan Shen <s@sxn.dev>"
 
+# These are only exported if running as root
 EXPOSE 25/tcp
 EXPOSE 143/tcp
+
+EXPOSE 1025/tcp
+EXPOSE 1143/tcp
 
 # Install dependencies and protonmail bridge
 RUN apt-get update \
