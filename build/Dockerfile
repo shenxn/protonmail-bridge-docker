@@ -8,7 +8,7 @@ WORKDIR /build/
 COPY build.sh VERSION /build/
 RUN bash build.sh
 
-FROM debian:sid-slim
+FROM debian:sid
 LABEL maintainer="Xiaonan Shen <s@sxn.dev>"
 
 # These are only exported if running as root
@@ -29,5 +29,6 @@ COPY gpgparams entrypoint.sh /protonmail/
 # Copy protonmail
 COPY --from=build /build/proton-bridge/bridge /protonmail/
 COPY --from=build /build/proton-bridge/proton-bridge /protonmail/
+COPY --from=build /build/proton-bridge/vault-editor /protonmail/
 
 ENTRYPOINT ["bash", "/protonmail/entrypoint.sh"]
