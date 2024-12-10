@@ -33,10 +33,18 @@ if [[ $1 == init ]]; then
     protonmail-bridge --cli $@
 
 else
-    if [[ $HOME == / ]] then
+    if [[ $HOME == "/" ]] then
         echo "When running rootless, you must set a home dir as the HOME env var. We recommend /data. Make sure it is writable by the user running the container (currently id is $(id -u) and HOME is $HOME)."
+        exit 1
+    fi
+
     # give friendly error if you don't have protonmail data
-    find $HOME | grep -q . || (echo "No files found - start the container with the init command, or copy/mount files into it at $HOME first. Sleeping 5 minutes before exiting so you have time to copy the files over." && sleep 300 && exit 1)
+    if [[ `find $HOME | wc -l` == 1 ]]; then # 1 because find $HOME will always return $HOME
+        echo "No files found - start the container with the init command, or copy/mount files into it at $HOME first. Sleeping 5 minutes before exiting so you have time to copy the files over."
+        sleep 300
+        exit 1
+    fi
+
     # give friendly error if the user doesn't own the data
     if [[ $(id -u) != 0 ]]; then
         if [[ `find $HOME/.* -not -user $(id -u) | wc -l` != 0 ]]; then
