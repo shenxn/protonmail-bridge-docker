@@ -54,6 +54,18 @@ else
     socat TCP-LISTEN:2025,fork TCP:127.0.0.1:1025 &
     socat TCP-LISTEN:2143,fork TCP:127.0.0.1:1143 &
 
+    # check if the vault-editor can read the config
+    /protonmail/vault-editor read 2>&1 1>/dev/null
+    # Modify the protonmail config with env variables and expected values
+    /protonmail/vault-editor read | \
+    jq '.Settings.AutoUpdate = env.PROTONMAIL_AutoUpdate 
+    | .Settings.TelemetryDisabled = env.PROTONMAIL_TelemetryDisabled
+    | .Settings.GluonDir |= "\(env.HOME)/.local/share/protonmail/bridge-v3/gluon"
+    | .Settings.Autostart = false
+    | .Settings.SMTPPort = 1025
+    | .Settings.IMAPPort = 1143 ' \
+    | /protonmail/vault-editor write
+
     # Start protonmail
     /protonmail/proton-bridge --noninteractive $@
 
