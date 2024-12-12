@@ -64,8 +64,10 @@ else
     | .Settings.GluonDir |= "\(env.HOME)/.local/share/protonmail/bridge-v3/gluon"
     | .Settings.Autostart = false
     | .Settings.SMTPPort = 1025
-    | .Settings.IMAPPort = 1143 ' \
-    | /protonmail/vault-editor write
+    | .Settings.IMAPPort = 1143 ' > /tmp/protonmail-conf.json
+    
+    cat /tmp/protonmail-conf.json | /protonmail/vault-editor write
+    rm /tmp/protonmail-conf.json
 
     # Start protonmail
     /protonmail/proton-bridge --noninteractive $@
