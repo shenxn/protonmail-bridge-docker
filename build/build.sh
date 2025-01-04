@@ -1,13 +1,11 @@
 #!/bin/bash
-
-set -ex
+set -eoux pipefail
 
 VERSION=`cat VERSION`
 
 # Clone new code
-git clone https://github.com/ProtonMail/proton-bridge.git
+git clone https://github.com/ProtonMail/proton-bridge.git --depth 1 --branch v$VERSION
 cd proton-bridge
-git checkout v$VERSION
 
 ARCH=$(uname -m)
 if [[ $ARCH == "armv7l" ]] ; then
