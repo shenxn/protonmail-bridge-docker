@@ -1,3 +1,4 @@
+# The build image could be golang, but it currently does not support riscv64. Only debian:sid does, at the time of writing.
 FROM debian:sid-slim AS build
 
 # Install dependencies
@@ -9,7 +10,7 @@ COPY build.sh VERSION /build/
 RUN bash build.sh
 
 FROM debian:sid-slim
-LABEL maintainer="Xiaonan Shen <s@sxn.dev>"
+LABEL maintainer="Simon Felding <sife@adm.ku.dk>"
 
 EXPOSE 25/tcp
 EXPOSE 143/tcp
@@ -25,5 +26,6 @@ COPY gpgparams entrypoint.sh /protonmail/
 # Copy protonmail
 COPY --from=build /build/proton-bridge/bridge /protonmail/
 COPY --from=build /build/proton-bridge/proton-bridge /protonmail/
+COPY --from=build /build/proton-bridge/vault-editor /protonmail/
 
 ENTRYPOINT ["bash", "/protonmail/entrypoint.sh"]
