@@ -1,15 +1,15 @@
-FROM debian:sid-slim AS build
+FROM golang:bookworm AS build
 
 # Install dependencies
-RUN apt-get update && apt-get install -y git golang build-essential libsecret-1-dev
+RUN apt-get update && apt-get install -y libsecret-1-dev
 
 # Build
 WORKDIR /build/
 COPY build.sh VERSION /build/
 RUN bash build.sh
 
-FROM debian:sid-slim
-LABEL maintainer="Xiaonan Shen <s@sxn.dev>"
+FROM debian:bookworm-slim
+LABEL maintainer="Simon Felding <sife@adm.ku.dk>"
 
 EXPOSE 25/tcp
 EXPOSE 143/tcp
@@ -25,5 +25,6 @@ COPY gpgparams entrypoint.sh /protonmail/
 # Copy protonmail
 COPY --from=build /build/proton-bridge/bridge /protonmail/
 COPY --from=build /build/proton-bridge/proton-bridge /protonmail/
+COPY --from=build /build/proton-bridge/vault-editor /protonmail/
 
 ENTRYPOINT ["bash", "/protonmail/entrypoint.sh"]
