@@ -20,4 +20,4 @@ if [[ $ARCH == "armv7l" ]] ; then
 fi
 
 # Build
-make build-nogui
+make build-nogui vault-editor
