@@ -2,94 +2,212 @@ name: build from source
 
 on:
   push:
-    branches:
-      - master
-      - dev
     paths:
       - .github/workflows/build.yaml
       - build/*
-      - deb/*
+      - VERSION
   pull_request:
     paths:
       - .github/workflows/build.yaml
       - build/*
-      - deb/*
   workflow_dispatch:
 
 env:
-  DOCKER_REPO: shenxn/protonmail-bridge
+  GHCR_REPO: shenxn/protonmail-bridge-docker
+  DOCKERHUB_REPO: shenxn/protonmail-bridge
   DOCKER_REPO_DEV: ghcr.io/shenxn/protonmail-bridge-dev
   PLATFORMS: linux/amd64,linux/arm64/v8,linux/arm/v7,linux/riscv64
 
 jobs:
-  build:
+  test:
     runs-on: ubuntu-latest
-    services:
-      registry:
-        image: registry:2
-        ports:
-          - 5000:5000
+    if: github.event_name == 'pull_request'
     steps:
-      - name: Checkout
-        uses: actions/checkout@master
+      - name: Prepare
+        run: |
+          platform=${{ matrix.platform }}
+          echo "PLATFORM_PAIR=${platform//\//-}" >> $GITHUB_ENV
+
       - name: Set version
         id: version
-        run: echo "::set-output name=version::`cat build/VERSION`"
-      - name: Set repo
-        id: repo
-        run: if [[ $GITHUB_REF == "refs/heads/master" ]]; then echo "::set-output name=repo::${DOCKER_REPO}"; else echo "::set-output name=repo::${DOCKER_REPO_DEV}"; fi
+        run: echo "::set-output name=version::`cat VERSION`"
+
       - name: Docker meta
-        id: docker_meta
-        uses: crazy-max/ghaction-docker-meta@v1
+        id: meta
+        uses: docker/metadata-action@v5
         with:
-          images: ${{ steps.repo.outputs.repo }}
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v1
+          images: |
+            ${{ env.DOCKERHUB_REPO }}
+            ${{ env.GHCR_REPO }}
+
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
+        uses: docker/setup-buildx-action@v3
         with:
           driver-opts: network=host
-      - name: Build image without push to registry
-        uses: docker/build-push-action@v2
+
+      - name: Build and push by digest
+        id: build
+        uses: docker/build-push-action@v6
         with:
+          labels: ${{ steps.meta.outputs.labels }}
+          outputs: type=image,"name=${{ env.DOCKERHUB_REPO }},${{ env.GHCR_REPO }}",push-by-digest=true,name-canonical=true,push=false
           context: ./build
           file: ./build/Dockerfile
-          platforms: ${{ env.PLATFORMS }}
-          push: true
-          tags: localhost:5000/protonmail-bridge:latest
+          tags: localbuild/protonmail-bridge:test
+          build-args: |
+            version="${{ steps.version.outputs.version }}"
       - name: Scan image
         id: scan
-        uses: anchore/scan-action@v2
+        uses: anchore/scan-action@v6
         with:
-          image: localhost:5000/protonmail-bridge:latest
+          image: localbuild/protonmail-bridge:test
           fail-build: true
           severity-cutoff: critical
-          acs-report-enable: true
       - name: Upload Anchore scan SARIF report
-        uses: github/codeql-action/upload-sarif@v1
+        uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: ${{ steps.scan.outputs.sarif }}
-      - name: Login to DockerHub
-        uses: docker/login-action@v1
-        if: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/master' }}
+
+  build:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    strategy:
+      fail-fast: false
+      matrix:
+        platform:
+          - linux/amd64
+          - linux/arm64/v8
+          - linux/arm/v7
+          - linux/riscv64
+    steps:
+      - name: Prepare
+        run: |
+          platform=${{ matrix.platform }}
+          echo "PLATFORM_PAIR=${platform//\//-}" >> $GITHUB_ENV
+
+      - name: Set version
+        id: version
+        run: echo "::set-output name=version::`cat VERSION`"
+
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: |
+            ${{ env.DOCKERHUB_REPO }}
+            ${{ env.GHCR_REPO }}
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push by digest
+        id: build
+        uses: docker/build-push-action@v6
+        with:
+          platforms: ${{ matrix.platform }}
+          labels: ${{ steps.meta.outputs.labels }}
+          outputs: type=image,"name=name=${{ env.DOCKERHUB_REPO }},${{ env.GHCR_REPO }}",push-by-digest=true,name-canonical=true,push=true
+          context: ./build
+          file: ./build/Dockerfile
+          tags: build,{{ steps.version.outputs.version }}-build
+          provenance: true
+          sbom: true
+          build-args: |
+            version="${{ steps.version.outputs.version }}"
+
+      - name: Export digest
+        run: |
+          mkdir -p ${{ runner.temp }}/digests
+          digest="${{ steps.build.outputs.digest }}"
+          touch "${{ runner.temp }}/digests/${digest#sha256:}"
+
+      - name: Scan image
+        id: scan
+        uses: anchore/scan-action@v6
+        with:
+          image: ${{ env.DOCKERHUB_REPO }}/protonmail-bridge:${{ steps.build.outputs.digest }}
+          fail-build: true
+          severity-cutoff: critical
+      - name: Upload Anchore scan SARIF report
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: ${{ steps.scan.outputs.sarif }}
+
+      - name: Upload digest
+        uses: actions/upload-artifact@v4
+        with:
+          name: digests-${{ env.PLATFORM_PAIR }}
+          path: ${{ runner.temp }}/digests/*
+          if-no-files-found: error
+          retention-days: 1
+
+
+  merge:
+    runs-on: ubuntu-latest
+    needs:
+      - build
+    steps:
+      - name: Download digests
+        uses: actions/download-artifact@v4
+        with:
+          path: ${{ runner.temp }}/digests
+          pattern: digests-*
+          merge-multiple: true
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
         with:
           username: ${{ secrets.REGISTRY_USERNAME }}
           password: ${{ secrets.REGISTRY_PASSWORD }}
-      - name: Login to GitHub Container Registry
-        uses: docker/login-action@v1
-        if: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/dev' }}
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
           password: ${{ secrets.CR_PAT }}
-      - name: Push image
-        uses: docker/build-push-action@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
         with:
-          context: ./build
-          file: ./build/Dockerfile
-          platforms: ${{ env.PLATFORMS }}
+          driver-opts: network=host
+
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: |
+            ${{ env.DOCKERHUB_REPO }}
+            ${{ env.GHCR_REPO }}
           tags: |
-            ${{ steps.repo.outputs.repo }}:build
-            ${{ steps.repo.outputs.repo }}:${{ steps.version.outputs.version }}-build
-          labels: ${{ steps.docker_meta.outputs.labels }}
-          push: ${{ github.event_name != 'pull_request' }}
+            type=raw,enable=true,value=${{ steps.version.outputs.version }}-build
+            type=raw,enable=true,suffix=,value=build
+
+      - name: Create manifest list and push
+        working-directory: ${{ runner.temp }}/digests
+        run: |
+          docker buildx imagetools create $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
+            $(printf '${{ env.DOCKERHUB_REPO }}@sha256:%s ' *)
+          docker buildx imagetools create $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
+            $(printf '${{ env.GHCR_REPO }}@sha256:%s ' *)
+
+      - name: Inspect image
+        run: |
+          docker buildx imagetools inspect ${{ env.DOCKERHUB_REPO }}:${{ steps.meta.outputs.version }}
+          docker buildx imagetools inspect ${{ env.GHCR_REPO }}:${{ steps.meta.outputs.version }}
