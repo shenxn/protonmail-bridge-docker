@@ -7,7 +7,7 @@ ARG version
 RUN apt-get update && apt-get install -y golang build-essential libsecret-1-dev
 
 # Build
-ADD https://github.com/ProtonMail/proton-bridge.git#{version} /build/
+ADD https://github.com/ProtonMail/proton-bridge.git#${version} /build/
 WORKDIR /build/
 RUN make build-nogui vault-editor
 
