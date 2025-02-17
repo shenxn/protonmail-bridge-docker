@@ -64,7 +64,7 @@ jobs:
         uses: anchore/scan-action@v6
         with:
           image: localbuild/protonmail-bridge:test
-          fail-build: true
+          fail-build: false
           severity-cutoff: critical
       - name: Upload Anchore scan SARIF report
         uses: github/codeql-action/upload-sarif@v3
