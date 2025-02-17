@@ -1,9 +1,9 @@
 ### The Deb install is just a repack of the official ProtonMail Bridge deb package with less dependencies.
 ### I recommend you don't use this. It's here for legacy reasons.
 
-FROM debian:sid-slim as build
+FROM debian:sid-slim AS build
 
-COPY RELEASE install.sh /
+COPY install.sh RELEASE /
 RUN apt-get update && apt-get install -y wget binutils
 
 # Repack deb (removes unnecessary dependencies and produces /protonmail.deb)
