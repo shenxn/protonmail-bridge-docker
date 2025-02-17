@@ -2,16 +2,15 @@ name: pack from deb
 
 on:
   push:
-    branches:
-      - master
-      - dev
     paths:
       - .github/workflows/deb.yaml
       - deb/*
+      - VERSION
   pull_request:
     paths:
       - .github/workflows/deb.yaml
       - deb/*
+  workflow_dispatch:
 
 env:
   DOCKER_REPO: shenxn/protonmail-bridge
