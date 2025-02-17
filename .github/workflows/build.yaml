@@ -8,10 +8,13 @@ on:
     paths:
       - .github/workflows/build.yaml
       - build/*
+      - deb/*
   pull_request:
     paths:
       - .github/workflows/build.yaml
       - build/*
+      - deb/*
+  workflow_dispatch:
 
 env:
   DOCKER_REPO: shenxn/protonmail-bridge
