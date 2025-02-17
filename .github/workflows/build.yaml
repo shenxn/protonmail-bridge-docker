@@ -24,6 +24,9 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event_name == 'pull_request'
     steps:
+      - name: Checkout
+        uses: actions/checkout@master
+
       - name: Prepare
         run: |
           platform=${{ matrix.platform }}
@@ -31,7 +34,7 @@ jobs:
 
       - name: Set version
         id: version
-        run: echo "::set-output name=version::`cat VERSION`"
+        run: echo "version=`cat VERSION`" >> $GITHUB_ENV
 
       - name: Docker meta
         id: meta
@@ -56,7 +59,7 @@ jobs:
           file: ./build/Dockerfile
           tags: localbuild/protonmail-bridge:test
           build-args: |
-            version="${{ steps.version.outputs.version }}"
+            version="${{ env.version }}"
       - name: Scan image
         id: scan
         uses: anchore/scan-action@v6
@@ -81,6 +84,9 @@ jobs:
           - linux/arm/v7
           - linux/riscv64
     steps:
+      - name: Checkout
+        uses: actions/checkout@master
+
       - name: Prepare
         run: |
           platform=${{ matrix.platform }}
@@ -88,7 +94,7 @@ jobs:
 
       - name: Set version
         id: version
-        run: echo "::set-output name=version::`cat VERSION`"
+        run: echo "version=`cat VERSION`" >> $GITHUB_ENV
 
       - name: Docker meta
         id: meta
@@ -126,11 +132,11 @@ jobs:
           outputs: type=image,"name=name=${{ env.DOCKERHUB_REPO }},${{ env.GHCR_REPO }}",push-by-digest=true,name-canonical=true,push=true
           context: ./build
           file: ./build/Dockerfile
-          tags: build,{{ steps.version.outputs.version }}-build
+          tags: build,{{ env.version }}-build
           provenance: true
           sbom: true
           build-args: |
-            version="${{ steps.version.outputs.version }}"
+            version="${{ env.version }}"
 
       - name: Export digest
         run: |
@@ -197,7 +203,7 @@ jobs:
             ${{ env.DOCKERHUB_REPO }}
             ${{ env.GHCR_REPO }}
           tags: |
-            type=raw,enable=true,value=${{ steps.version.outputs.version }}-build
+            type=raw,enable=true,value=${{ env.version }}-build
             type=raw,enable=true,suffix=,value=build
 
       - name: Create manifest list and push

@@ -24,7 +24,7 @@ jobs:
         uses: actions/checkout@master
       - name: Set version
         id: version
-        run: echo "::set-output name=version::`cat VERSION`"
+        run: echo "version=`cat VERSION`" >> $GITHUB_ENV
       - name: Set repo
         id: repo
         run: if [[ $GITHUB_REF == "refs/heads/master" ]]; then echo "::set-output name=repo::${DOCKER_REPO}"; else echo "::set-output name=repo::${DOCKER_REPO_DEV}"; fi
@@ -74,6 +74,6 @@ jobs:
           file: ./deb/Dockerfile
           tags: |
             ${{ steps.repo.outputs.repo }}:latest
-            ${{ steps.repo.outputs.repo }}:${{ steps.version.outputs.version }}
+            ${{ steps.repo.outputs.repo }}:${{ env.version }}
           labels: ${{ steps.docker_meta.outputs.labels }}
           push: ${{ github.event_name != 'pull_request' }}
