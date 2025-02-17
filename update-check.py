@@ -23,10 +23,9 @@ git("add -A")
 
 if git("diff --cached --quiet") == 0: # Returns 0 if there are no changes
   print("Version didn't change")
-  exit(1)
+  exit(0)
 
 git(f"commit -m 'Bump version to {version}'")
-
 is_pull_request = sys.argv[1] == "true"
 
 if is_pull_request:
