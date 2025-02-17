@@ -2,9 +2,6 @@ name: update check
 
 on:
   push:
-    branches:
-      - master
-      - dev
     paths:
       - .github/workflows/update-check.yaml
       - update-check.py

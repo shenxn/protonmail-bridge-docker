@@ -3,7 +3,7 @@
 
 FROM debian:sid-slim AS build
 
-COPY install.sh RELEASE /
+COPY install.sh PACKAGE /
 RUN apt-get update && apt-get install -y wget binutils
 
 # Repack deb (removes unnecessary dependencies and produces /protonmail.deb)
@@ -18,7 +18,7 @@ EXPOSE 143/tcp
 WORKDIR /protonmail
 
 # Copy bash scripts
-COPY gpgparams entrypoint.sh RELEASE /protonmail/
+COPY gpgparams entrypoint.sh PACKAGE /protonmail/
 COPY --from=build /protonmail.deb /tmp/protonmail.deb
 
 RUN apt-get update \

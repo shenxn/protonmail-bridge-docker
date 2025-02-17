@@ -3,7 +3,7 @@ set -ex
 
 # Repack deb (remove unnecessary dependencies)
 mkdir deb
-wget -i "$RELEASE" -O /deb/protonmail.deb
+wget -i /PACKAGE -O /deb/protonmail.deb
 cd deb
 ar x -v protonmail.deb
 mkdir control
