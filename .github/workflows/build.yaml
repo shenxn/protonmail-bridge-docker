@@ -56,14 +56,14 @@ jobs:
           outputs: type=image,"name=${{ env.DOCKERHUB_REPO }},${{ env.GHCR_REPO }}",push-by-digest=true,name-canonical=true,push=false
           context: ./build
           file: ./build/Dockerfile
-          tags: localbuild/protonmail-bridge:test
+          tags: localbuild/protonmail-bridge:test-build
           build-args: |
             version=${{ env.version }}
       - name: Scan image
         id: scan
-        uses: anchore/scan-action@v6
+        uses: anchore/scan-action@v2
         with:
-          image: localbuild/protonmail-bridge:test
+          image: localbuild/protonmail-bridge:test-build
           fail-build: false
           severity-cutoff: critical
           acs-report-enable: true
