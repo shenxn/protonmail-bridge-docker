@@ -58,7 +58,7 @@ jobs:
           file: ./build/Dockerfile
           tags: localbuild/protonmail-bridge:test
           build-args: |
-            version="${{ env.version }}"
+            version=${{ env.version }}
       - name: Scan image
         id: scan
         uses: anchore/scan-action@v6
@@ -135,7 +135,7 @@ jobs:
           provenance: true
           sbom: true
           build-args: |
-            version="${{ env.version }}"
+            version=${{ env.version }}
 
       - name: Export digest
         run: |
