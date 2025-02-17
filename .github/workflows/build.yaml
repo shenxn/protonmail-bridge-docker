@@ -10,6 +10,7 @@ on:
     paths:
       - .github/workflows/build.yaml
       - build/*
+      - VERSION
   workflow_dispatch:
 
 env:
