@@ -55,7 +55,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           labels: ${{ steps.meta.outputs.labels }}
-          outputs: type=image,"name=${{ env.GHCR_REPO }}",push-by-digest=true,name-canonical=true,push=false
+          outputs: type=image,"name=${{ env.GHCR_REPO }}",push-by-digest=false,name-canonical=true,push=true
           context: ./build
           file: ./build/Dockerfile
           tags: "${{ env.DOCKER_REPO_DEV }}:${{ github.ref_name }}"
