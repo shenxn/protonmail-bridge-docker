@@ -93,3 +93,13 @@ jobs:
             ${{ steps.repo.outputs.repo }}:${{ steps.version.outputs.version }}-build
           labels: ${{ steps.docker_meta.outputs.labels }}
           push: ${{ github.event_name != 'pull_request' }}
+      - name: Push test-image
+        uses: docker/build-push-action@v2
+        with:
+          context: ./build
+          file: ./build/Dockerfile
+          platforms: ${{ env.PLATFORMS }}
+          tags: |
+            ${{ steps.repo.outputs.repo }}:pr-${{ github.head_ref }}
+          labels: ${{ steps.docker_meta.outputs.labels }}
+          push: ${{ github.event_name == 'pull_request' }}

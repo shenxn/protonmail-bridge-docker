@@ -8,7 +8,7 @@ if [[ $1 == init ]]; then
     # Initialize pass
     gpg --generate-key --batch /protonmail/gpgparams
     pass init pass-key
-    
+
     # Kill the other instance as only one can be running at a time.
     # This allows users to run entrypoint init inside a running conainter
     # which is useful in a k8s environment.
@@ -30,7 +30,7 @@ else
         sleep 300
         exit 1
     fi
-    
+
     # give friendly error if the user doesn't own the data
     if [[ $(id -u) != 0 ]]; then
         if [[ `find $HOME/.* -not -user $(id -u) | wc -l` != 0 ]]; then
@@ -49,25 +49,10 @@ else
     if [[ $(id -u) == 0 ]]; then
         socat TCP-LISTEN:25,fork TCP:127.0.0.1:1025 &
         socat TCP-LISTEN:143,fork TCP:127.0.0.1:1143 &
+    else
+        socat TCP-LISTEN:2025,fork TCP:127.0.0.1:1025 &
+        socat TCP-LISTEN:2143,fork TCP:127.0.0.1:1143 &
     fi
-
-    socat TCP-LISTEN:2025,fork TCP:127.0.0.1:1025 &
-    socat TCP-LISTEN:2143,fork TCP:127.0.0.1:1143 &
-
-    # Broken until https://github.com/ProtonMail/proton-bridge/issues/512 is resolved.
-    # check if the vault-editor can read the config
-    /protonmail/vault-editor read 2>&1 1>/dev/null
-    # Modify the protonmail config with env variables and expected values. Env variables must be converted from string to boolean.
-    /protonmail/vault-editor read | \
-    jq '.Settings.AutoUpdate = (env.PROTONMAIL_AutoUpdate | if . == "true" then true else false end)
-    | .Settings.TelemetryDisabled = (env.PROTONMAIL_TelemetryDisabled | if . == "true" then true else false end)
-    | .Settings.GluonDir |= "\(env.HOME)/.local/share/protonmail/bridge-v3/gluon"
-    | .Settings.Autostart = false
-    | .Settings.SMTPPort = 1025
-    | .Settings.IMAPPort = 1143 ' > /tmp/protonmail-conf.json
-    
-    cat /tmp/protonmail-conf.json | /protonmail/vault-editor write
-    rm /tmp/protonmail-conf.json
 
     # Start protonmail
     /protonmail/proton-bridge --noninteractive $@
