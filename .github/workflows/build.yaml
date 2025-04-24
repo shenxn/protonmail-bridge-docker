@@ -58,14 +58,14 @@ jobs:
           outputs: type=image,"name=${{ env.GHCR_REPO }}",push-by-digest=true,name-canonical=true,push=false
           context: ./build
           file: ./build/Dockerfile
-          tags: "${{ env.DOCKER_REPO_DEV }}:${{ github.head_ref }}"
+          tags: "${{ env.DOCKER_REPO_DEV }}:${{ github.ref_name }}"
           build-args: |
             version=${{ env.version }}
       - name: Scan image
         id: scan
         uses: anchore/scan-action@v6
         with:
-          image: "${{ env.DOCKER_REPO_DEV }}:${{ github.head_ref }}"
+          image: "${{ env.DOCKER_REPO_DEV }}:${{ github.ref_name }}"
           fail-build: false
           severity-cutoff: critical
       - name: Upload Anchore scan SARIF report
