@@ -140,8 +140,8 @@ jobs:
             "${{ env.DOCKERHUB_REPO }}:${{ env.version }}-build"
             "${{ env.GHCR_REPO }}:build"
             "${{ env.GHCR_REPO }}:${{ env.version }}-build"
-          provenance: true
-          sbom: true
+          provenance: false
+          sbom: false
           build-args: |
             version=${{ env.version }}
 
