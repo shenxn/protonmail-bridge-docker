@@ -15,7 +15,7 @@ on:
 env:
   GHCR_REPO: shenxn/protonmail-bridge-docker
   DOCKERHUB_REPO: shenxn/protonmail-bridge
-  DOCKER_REPO_DEV: ghcr.io/shenxn/protonmail-bridge-dev
+  DOCKER_REPO_DEV: ghcr.io/shenxn/protonmail-bridge
   PLATFORMS: linux/amd64,linux/arm64/v8,linux/arm/v7,linux/riscv64
 
 jobs:
@@ -42,7 +42,7 @@ jobs:
         with:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
-          password: ${{ secrets.CR_PAT }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -57,14 +57,14 @@ jobs:
           outputs: type=image,"name=${{ env.DOCKER_REPO_DEV }}",push-by-digest=false,name-canonical=true,push=true
           context: ./build
           file: ./build/Dockerfile
-          tags: "${{ env.DOCKER_REPO_DEV }}:${{ github.ref_name }}"
+          tags: "${{ env.DOCKER_REPO_DEV }}:dev-${{ github.ref_name }}"
           build-args: |
             version=${{ env.version }}
 
       - name: Run Trivy vulnerability scan
         uses: aquasecurity/trivy-action@0.30.0
         with:
-          image-ref: "${{ env.DOCKER_REPO_DEV }}:${{ github.ref_name }}"
+          image-ref: "${{ env.DOCKER_REPO_DEV }}:dev-${{ github.ref_name }}"
           format: 'sarif'
           exit-code: 0
           severity: 'CRITICAL,HIGH'
