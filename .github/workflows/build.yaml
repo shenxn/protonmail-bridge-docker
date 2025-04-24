@@ -35,8 +35,7 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: |
-            ${{ env.DOCKERHUB_REPO }}
-            ${{ env.GHCR_REPO }}
+            ${{ env.DOCKER_REPO_DEV }}
 
       - name: Login to GHCR
         uses: docker/login-action@v3
@@ -55,7 +54,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           labels: ${{ steps.meta.outputs.labels }}
-          outputs: type=image,"name=${{ env.GHCR_REPO }}",push-by-digest=false,name-canonical=true,push=true
+          outputs: type=image,"name=${{ env.DOCKER_REPO_DEV }}",push-by-digest=false,name-canonical=true,push=true
           context: ./build
           file: ./build/Dockerfile
           tags: "${{ env.DOCKER_REPO_DEV }}:${{ github.ref_name }}"
@@ -148,19 +147,6 @@ jobs:
           digest="${{ steps.build.outputs.digest }}"
           touch "${{ runner.temp }}/digests/${digest#sha256:}"
 
-      - name: Run Trivy vulnerability scan
-        uses: aquasecurity/trivy-action@0.30.0
-        with:
-          image-ref: "${{ env.DOCKERHUB_REPO }}:${{ env.version }}-build"
-          format: 'sarif'
-          exit-code: 0
-          severity: 'CRITICAL,HIGH'
-          output: 'trivy-results.sarif'
-      - name: Upload Trivy scan SARIF report
-        uses: github/codeql-action/upload-sarif@v3
-        with:
-          sarif_file: 'trivy-results.sarif'
-
       - name: Upload digest
         uses: actions/upload-artifact@v4
         with:
@@ -218,6 +204,19 @@ jobs:
             $(printf '${{ env.DOCKERHUB_REPO }}@sha256:%s ' *)
           docker buildx imagetools create $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
             $(printf '${{ env.GHCR_REPO }}@sha256:%s ' *)
+
+      - name: Run Trivy vulnerability scan
+        uses: aquasecurity/trivy-action@0.30.0
+        with:
+          image-ref: "${{ env.DOCKERHUB_REPO }}:${{ env.version }}-build"
+          format: 'sarif'
+          exit-code: 0
+          severity: 'CRITICAL,HIGH'
+          output: 'trivy-results.sarif'
+      - name: Upload Trivy scan SARIF report
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: 'trivy-results.sarif'
 
       - name: Inspect image
         run: |
