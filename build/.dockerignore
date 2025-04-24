@@ -1,8 +1,0 @@
-*
-
-!.dockerignore
-!VERSION
-!entrypoint.sh
-!gpgparams
-!Dockerfile
-!build.sh
