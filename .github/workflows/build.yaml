@@ -135,7 +135,11 @@ jobs:
           outputs: type=image,"name=name=${{ env.DOCKERHUB_REPO }},${{ env.GHCR_REPO }}",push-by-digest=true,name-canonical=true,push=true
           context: ./build
           file: ./build/Dockerfile
-          tags: "${{ env.version }}-build"
+          tags: |
+            "${{ env.DOCKERHUB_REPO }}:build
+            "${{ env.DOCKERHUB_REPO }}:${{ env.version }}-build"
+            "${{ env.GHCR_REPO }}:build"
+            "${{ env.GHCR_REPO }}:${{ env.version }}-build"
           provenance: true
           sbom: true
           build-args: |
