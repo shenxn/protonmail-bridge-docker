@@ -26,11 +26,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@master
 
-      - name: Prepare
-        run: |
-          platform=${{ matrix.platform }}
-          echo "PLATFORM_PAIR=${platform//\//-}" >> $GITHUB_ENV
-
       - name: Set version
         id: version
         run: echo "version=`cat VERSION`" >> $GITHUB_ENV
@@ -43,6 +38,13 @@ jobs:
             ${{ env.DOCKERHUB_REPO }}
             ${{ env.GHCR_REPO }}
 
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
         with:
@@ -53,20 +55,19 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           labels: ${{ steps.meta.outputs.labels }}
-          outputs: type=image,"name=${{ env.DOCKERHUB_REPO }},${{ env.GHCR_REPO }}",push-by-digest=true,name-canonical=true,push=false
+          outputs: type=image,"name=${{ env.GHCR_REPO }}",push-by-digest=true,name-canonical=true,push=false
           context: ./build
           file: ./build/Dockerfile
-          tags: localbuild/protonmail-bridge:test-build
+          tags: "${{ env.DOCKER_REPO_DEV }}:${{ github.head_ref }}"
           build-args: |
             version=${{ env.version }}
       - name: Scan image
         id: scan
-        uses: anchore/scan-action@v2
+        uses: anchore/scan-action@v6
         with:
-          image: localbuild/protonmail-bridge:test-build
+          image: "${{ env.DOCKER_REPO_DEV }}:${{ github.head_ref }}"
           fail-build: false
           severity-cutoff: critical
-          acs-report-enable: true
       - name: Upload Anchore scan SARIF report
         uses: github/codeql-action/upload-sarif@v3
         with:
@@ -132,7 +133,7 @@ jobs:
           outputs: type=image,"name=name=${{ env.DOCKERHUB_REPO }},${{ env.GHCR_REPO }}",push-by-digest=true,name-canonical=true,push=true
           context: ./build
           file: ./build/Dockerfile
-          tags: build,{{ env.version }}-build
+          tags: "${{ env.version }}-build"
           provenance: true
           sbom: true
           build-args: |
@@ -151,7 +152,6 @@ jobs:
           image: ${{ env.DOCKERHUB_REPO }}/protonmail-bridge:${{ steps.build.outputs.digest }}
           fail-build: true
           severity-cutoff: critical
-          acs-report-enable: true
       - name: Upload Anchore scan SARIF report
         uses: github/codeql-action/upload-sarif@v3
         with:
