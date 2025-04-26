@@ -16,6 +16,8 @@ LABEL maintainer="Simon Felding <sife@adm.ku.dk>"
 
 EXPOSE 25/tcp
 EXPOSE 143/tcp
+EXPOSE 1025/tcp
+EXPOSE 1143/tcp
 
 # Install dependencies and protonmail bridge
 RUN apt-get update \
