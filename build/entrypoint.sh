@@ -64,3 +64,5 @@ jq '.Settings.AutoUpdate = (env.PROTONMAIL_AutoUpdate | if . == "true" then true
 # Start protonmail
 echo "Starting ProtonMail Bridge. Connect to the CLI with `docker exec -it <container_name>` and type 'help' for instructions."
 /protonmail/proton-bridge --cli $@
+echo "ProtonMail bridge stopped. waiting 30 seconds before exiting in order to preserve the logs."
+sleep 30 # so we have time to read the logs in case of a crash loop

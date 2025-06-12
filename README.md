@@ -37,12 +37,17 @@ To initialize and add account to the bridge, run the following steps:
 ```
 docker run -it -v protonmail:/root shenxn/protonmail-bridge
 ```
+2. When you are done, press `CTRL+P` followed by `CTRL+Q`. This detaches the container from your terminal and keeps it running in the background.
 
 ## Setting up the bridge
 
 If you have not set up an account, you need to do the folliwing steps in the protonmail-bridge CLI interface:
-1. Use the `add` command to add your ProtonMail account. You will be prompted to enter your ProtonMail username and password.
-2. After adding your account, use the `info` command to see the configuration information (username and password).
+1. Connect to the running container by getting it's name using `docker ps` and then running:
+```
+docker attach <container_name>
+```
+2. Use the `add` command to add your ProtonMail account. You will be prompted to enter your ProtonMail username and password.
+3. After adding your account, use the `info` command to see the configuration information (username and password).
 
 ## Security
 
