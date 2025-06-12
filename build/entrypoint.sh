@@ -29,7 +29,7 @@ if [[ ! -f $HOME/.gnupg ]]; then
     echo "No GPG key found in $HOME/.gnupg. Running gpg --generate-key."
     gpg --generate-key --batch /protonmail/gpgparams
     pass init pass-key
-
+fi
 # delete lock files if they exist - this can happen if the container is restarted forcefully
 
 if [[ `find $HOME -name "*.lock" | wc -l` != 0 ]]; then
