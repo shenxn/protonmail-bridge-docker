@@ -75,6 +75,8 @@ docker run -d --name=protonmail-bridge -v protonmail:/root -p 127.0.0.1:1025:25/
 
 Besides, you can publish only port 25 (SMTP) if you don't need to receive any email (e.g. as a email notification service).
 
+The container uses root but if you want to go rootless, there are PR you might want to look at ([#110](https://github.com/shenxn/protonmail-bridge-docker/pull/110), [#69](https://github.com/shenxn/protonmail-bridge-docker/pull/69)).
+
 ## Compatibility
 
 The bridge currently only supports some of the email clients. More details can be found on the official website. I've tested this on a Synology DiskStation and it runs well. However, you may need ssh onto it to run the interactive docker command to add your account. The main reason of using this instead of environment variables is that it seems to be the best way to support two-factor authentication.
