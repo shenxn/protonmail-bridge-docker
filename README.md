@@ -45,6 +45,16 @@ docker compose run protonmail-bridge init
 
 Wait for the bridge to startup, then you will see a prompt appear for [Proton Mail Bridge interactive shell](https://proton.me/support/bridge-cli-guide). Use the `login` command and follow the instructions to add your account into the bridge. Then use `info` to see the configuration information (username and password). After that, use `exit` to exit the bridge. You may need `CTRL+C` to exit the docker entirely.
 
+## Port configuration
+
+If you want to modify the network ports, there are a few useful things to know.
+
+Usually for docker you just need an internal and external ports, for example `ports: 5555:25` means that your host's `5555` port leads to the port `25` *inside* the container.
+
+In this project however, the [entrypoint.sh](https://github.com/shenxn/protonmail-bridge-docker/blob/master/build/entrypoint.sh) script uses `socat` to modify the *internal* port to reach the port expected by `proton-bridge`. The traffic is slightly modified to make it appear to come from `127.0.0.1` by `socat`, as the bridge only accepts this (the bridge was done to be run on your desktop alongside your mail client, not to act as an IMAP proxy server). Hence, when you run `info` from the bridge console, the ports are the ones expected by the bridge. You can modify the docker external port freely but the internal port has to match the arguments from `socat`, which should always redirect to the port expected by the bridge.
+
+Hence your mail client should be configured to use the docker external port, not the port mentioned in `info`.
+
 ## Run
 
 To run the container, use the following command.
