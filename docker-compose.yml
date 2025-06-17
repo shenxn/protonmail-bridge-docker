@@ -6,6 +6,8 @@ services:
     ports:
       - 1025:25/tcp
       - 1143:143/tcp
+      # Note: You should not have to modify the inner ports because
+      # socat is used to send them to the port expected by the bridge
     restart: unless-stopped
     volumes:
       - protonmail:/root
