@@ -1,7 +1,9 @@
+# ARG before any FROM is global and available in FROM instructions.
+# debian:bookworm-slim is the default; the workflow overrides to debian:sid-slim for riscv64
+# since bookworm has no riscv64 image.
+ARG RUNTIME_IMAGE=debian:bookworm-slim
+
 # debian:sid-slim is required for the build stage to support riscv64 (golang:bookworm does not).
-# For the runtime stage we default to debian:bookworm-slim for stable, predictable package names.
-# riscv64 requires debian:sid-slim at runtime too (bookworm has no riscv64 image);
-# the workflow passes RUNTIME_IMAGE=debian:sid-slim for that platform.
 FROM debian:sid-slim AS build
 
 ARG version
@@ -14,7 +16,6 @@ ADD https://github.com/ProtonMail/proton-bridge.git#${version} /build/
 WORKDIR /build/
 RUN make build-nogui vault-editor
 
-ARG RUNTIME_IMAGE=debian:bookworm-slim
 FROM ${RUNTIME_IMAGE}
 LABEL maintainer="Dan Williams <dancwilliams@github>"
 
