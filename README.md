@@ -22,6 +22,27 @@ This fork includes fixes and improvements that are not yet merged upstream:
 - **Health check** — Docker reports container health based on the bridge process status
 - **Automated version tracking** — new Proton Bridge releases are detected within 24 hours and trigger a new multi-arch image build automatically
 
+## Migrating to this image
+
+For most users, upgrading is:
+
+```
+docker compose pull && docker compose up -d
+```
+
+or `docker pull dancwilliams/protonmail-bridge` + container restart. No re-initialization is required.
+
+### Breaking changes
+
+**arm/v7 removed (v3.22.0+)**
+32-bit ARM is no longer supported. The upstream `go-libfido2` dependency is incompatible with 32-bit ARM and there is no fix available upstream. Users on arm/v7 hardware should stay on an older image tag or switch to a supported platform.
+
+**Tag format changed**
+Tags no longer carry a `-build` suffix. If you were pinning to a tag like `v3.21.2-build`, update your compose file or run command to use `v3.21.2` instead. Users tracking `latest` are unaffected.
+
+**Auto-updater disabled**
+The bridge's built-in self-updater is now permanently blocked (bridge binaries are made read-only at image build time). This prevents the updater from replacing container binaries at runtime, which previously caused broken arm64 containers when it downloaded an amd64 binary. Version updates now come exclusively through new container image releases, which this repository handles automatically via a daily version check.
+
 ## Architectures
 
 Images are built for the following platforms from source:
