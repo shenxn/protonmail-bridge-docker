@@ -22,6 +22,7 @@ env:
 jobs:
   test:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     if: github.ref != 'refs/heads/master'
     steps:
       - name: Checkout
@@ -74,16 +75,19 @@ jobs:
           sarif_file: 'trivy-results.sarif'
 
   build:
-    runs-on: ubuntu-latest
-    timeout-minutes: 60
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 90
     if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/master'
     strategy:
       fail-fast: false
       matrix:
-        platform:
-          - linux/amd64
-          - linux/arm64/v8
-          - linux/riscv64
+        include:
+          - platform: linux/amd64
+            runner: ubuntu-latest
+          - platform: linux/arm64/v8
+            runner: ubuntu-24.04-arm  # native arm64 runner, no QEMU needed
+          - platform: linux/riscv64
+            runner: ubuntu-latest     # QEMU required; CGO compilation is slow
     steps:
       - name: Checkout
         uses: actions/checkout@v4
