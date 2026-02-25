@@ -30,7 +30,7 @@ Images are built for the following platforms from source:
 |---|---|
 | `linux/amd64` | Yes |
 | `linux/arm64/v8` | Yes |
-| `linux/arm/v7` | Yes |
+| `linux/arm/v7` | No — upstream go-libfido2 dependency does not support 32-bit ARM as of v3.22.0 |
 | `linux/riscv64` | Yes |
 
 ## Tags

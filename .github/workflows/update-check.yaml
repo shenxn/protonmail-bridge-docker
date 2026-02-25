@@ -24,4 +24,7 @@ jobs:
     - name: Install dependencies
       run: pip install requests
     - name: Check Update
+      env:
+        GITHUB_TOKEN: ${{ secrets.PERSONAL_TOKEN }}
+        GITHUB_REPOSITORY: ${{ github.repository }}
       run: python3 update-check.py ${{ github.event_name == 'pull_request' }}
