@@ -23,7 +23,7 @@ HEALTHCHECK --interval=30s --timeout=10s --retries=3 --start-period=60s \
 
 # Install dependencies and protonmail bridge
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends socat pass libsecret-1-0 libfido2-1 libcbor0 ca-certificates \
+    && apt-get install -y --no-install-recommends socat pass libsecret-1-0 libfido2-1 ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy bash scripts
