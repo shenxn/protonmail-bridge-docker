@@ -91,6 +91,12 @@ jobs:
         run: |
           platform=${{ matrix.platform }}
           echo "PLATFORM_PAIR=${platform//\//-}" >> $GITHUB_ENV
+          # debian:bookworm-slim has no riscv64 image; fall back to sid-slim for that platform
+          if [ "$platform" = "linux/riscv64" ]; then
+            echo "RUNTIME_IMAGE=debian:sid-slim" >> $GITHUB_ENV
+          else
+            echo "RUNTIME_IMAGE=debian:bookworm-slim" >> $GITHUB_ENV
+          fi
 
       - name: Set version
         run: echo "version=$(cat VERSION)" >> $GITHUB_ENV
@@ -126,6 +132,7 @@ jobs:
           sbom: false
           build-args: |
             version=${{ env.version }}
+            RUNTIME_IMAGE=${{ env.RUNTIME_IMAGE }}
 
       - name: Export digest
         run: |

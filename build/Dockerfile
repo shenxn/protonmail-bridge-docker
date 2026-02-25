@@ -1,5 +1,7 @@
 # debian:sid-slim is required for the build stage to support riscv64 (golang:bookworm does not).
-# For the runtime stage we use debian:bookworm-slim for stable, predictable package names.
+# For the runtime stage we default to debian:bookworm-slim for stable, predictable package names.
+# riscv64 requires debian:sid-slim at runtime too (bookworm has no riscv64 image);
+# the workflow passes RUNTIME_IMAGE=debian:sid-slim for that platform.
 FROM debian:sid-slim AS build
 
 ARG version
@@ -12,7 +14,8 @@ ADD https://github.com/ProtonMail/proton-bridge.git#${version} /build/
 WORKDIR /build/
 RUN make build-nogui vault-editor
 
-FROM debian:bookworm-slim
+ARG RUNTIME_IMAGE=debian:bookworm-slim
+FROM ${RUNTIME_IMAGE}
 LABEL maintainer="Dan Williams <dancwilliams@github>"
 
 EXPOSE 25/tcp
