@@ -1,14 +1,13 @@
-version: '2.1'
-
 services:
   protonmail-bridge:
-    image: shenxn/protonmail-bridge
+    image: dancwilliams/protonmail-bridge:latest
     ports:
       - 1025:25/tcp
       - 1143:143/tcp
     restart: unless-stopped
     volumes:
       - protonmail:/root
+
 volumes:
   protonmail:
     name: protonmail

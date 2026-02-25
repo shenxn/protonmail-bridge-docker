@@ -1,93 +1,126 @@
-# ProtonMail IMAP/SMTP Bridge Docker Container
+# ProtonMail Bridge Docker Container
 
-![version badge](https://img.shields.io/docker/v/shenxn/protonmail-bridge)
-![image size badge](https://img.shields.io/docker/image-size/shenxn/protonmail-bridge/build)
-![docker pulls badge](https://img.shields.io/docker/pulls/shenxn/protonmail-bridge)
-![deb badge](https://github.com/shenxn/protonmail-bridge-docker/workflows/pack%20from%20deb/badge.svg)
-![build badge](https://github.com/shenxn/protonmail-bridge-docker/workflows/build%20from%20source/badge.svg)
+![build badge](https://github.com/dancwilliams/protonmail-bridge-docker/workflows/build%20from%20source/badge.svg)
+![version badge](https://img.shields.io/docker/v/dancwilliams/protonmail-bridge)
+![image size badge](https://img.shields.io/docker/image-size/dancwilliams/protonmail-bridge/latest)
+![docker pulls badge](https://img.shields.io/docker/pulls/dancwilliams/protonmail-bridge)
 
-This is an unofficial Docker container of the [ProtonMail Bridge](https://protonmail.com/bridge/). Some of the scripts are based on [Hendrik Meyer's work](https://gitlab.com/T4cC0re/protonmail-bridge-docker).
+An unofficial Docker container for the [Proton Mail Bridge](https://proton.me/mail/bridge), maintained by the community. This is a fork of [shenxn/protonmail-bridge-docker](https://github.com/shenxn/protonmail-bridge-docker), kept up to date and actively maintained.
 
-Docker Hub: [https://hub.docker.com/r/shenxn/protonmail-bridge](https://hub.docker.com/r/shenxn/protonmail-bridge)
+- **Docker Hub:** [dancwilliams/protonmail-bridge](https://hub.docker.com/r/dancwilliams/protonmail-bridge)
+- **GitHub:** [dancwilliams/protonmail-bridge-docker](https://github.com/dancwilliams/protonmail-bridge-docker)
+- **GHCR:** `ghcr.io/dancwilliams/protonmail-bridge-docker`
 
-GitHub: [https://github.com/shenxn/protonmail-bridge-docker](https://github.com/shenxn/protonmail-bridge-docker)
+## What's different from upstream
 
-## ARM Support
+This fork includes fixes and improvements that are not yet merged upstream:
 
-We now support ARM devices (`arm64` and `arm/v7`)! Use the images tagged with `build`. See next section for details.
+- **Fixes v3.22.0+** — adds missing `libfido2` and `libcbor` runtime dependencies that caused containers to fail to start
+- **Auto-updater disabled** — the bridge's built-in self-updater is blocked; version management is handled by the container image itself (no more broken arm64 containers due to amd64 binary replacement)
+- **Long-uptime stability fix** — replaced the fragile stdin pipe with `sleep infinity`, preventing the bridge from detaching after several days of uptime
+- **Stale GPG socket cleanup** — removes leftover `S.gpg-agent` sockets on startup, preventing auth failures after container restarts
+- **Health check** — Docker reports container health based on the bridge process status
+- **Automated version tracking** — new Proton Bridge releases are detected within 24 hours and trigger a new multi-arch image build automatically
+
+## Architectures
+
+Images are built for the following platforms from source:
+
+| Architecture | Supported |
+|---|---|
+| `linux/amd64` | Yes |
+| `linux/arm64/v8` | Yes |
+| `linux/arm/v7` | Yes |
+| `linux/riscv64` | Yes |
 
 ## Tags
 
-There are two types of images.
- - `deb`: Images based on the official [.deb release](https://protonmail.com/bridge/install). It only supports the `amd64` architecture.
- - `build`: Images based on the [source code](https://github.com/ProtonMail/proton-bridge). It supports `amd64`, `arm64`, `arm/v7` and `riscv64`. Supporting to more architectures is possible. PRs are welcome.
-
-tag | description
- -- | --
-`latest` | latest `deb` image
-`[version]` | `deb` images
-`build` | latest `build` image
-`[version]-build` | `build` images
+| Tag | Description |
+|---|---|
+| `latest` | Most recent release |
+| `v3.x.x` | Specific Proton Bridge version |
 
 ## Initialization
 
-To initialize and add account to the bridge, run the following command.
+Before running the container for the first time, you must initialize it and log in to your Proton account.
 
+**Using `docker run`:**
 ```
-docker run --rm -it -v protonmail:/root shenxn/protonmail-bridge init
+docker run --rm -it -v protonmail:/root dancwilliams/protonmail-bridge init
 ```
 
-If you want to use Docker Compose instead, you can create a copy of the provided example [docker-compose.yml](docker-compose.yml) file, modify it to suit your needs, and then run the following command:
-
+**Using Docker Compose:**
 ```
 docker compose run protonmail-bridge init
 ```
 
-Wait for the bridge to startup, then you will see a prompt appear for [Proton Mail Bridge interactive shell](https://proton.me/support/bridge-cli-guide). Use the `login` command and follow the instructions to add your account into the bridge. Then use `info` to see the configuration information (username and password). After that, use `exit` to exit the bridge. You may need `CTRL+C` to exit the docker entirely.
+Wait for the bridge to start, then you will see the [Proton Bridge interactive shell](https://proton.me/support/bridge-cli-guide). Use the `login` command and follow the prompts to add your account. Once logged in, run `info` to see the IMAP/SMTP credentials your mail client will need. Then run `exit` to quit. You may need `CTRL+C` to exit the container entirely.
+
+The credentials shown by `info` are what you enter in your email client — not your Proton account password.
 
 ## Run
 
-To run the container, use the following command.
-
+**Using `docker run`:**
 ```
-docker run -d --name=protonmail-bridge -v protonmail:/root -p 1025:25/tcp -p 1143:143/tcp --restart=unless-stopped shenxn/protonmail-bridge
+docker run -d \
+  --name=protonmail-bridge \
+  -v protonmail:/root \
+  -p 1025:25/tcp \
+  -p 1143:143/tcp \
+  --restart=unless-stopped \
+  dancwilliams/protonmail-bridge
 ```
 
-Or, if using Docker Compose, use the following command.
-
+**Using Docker Compose:**
 ```
 docker compose up -d
 ```
 
-## Kubernetes
-
-If you want to run this image in a Kubernetes environment. You can use the [Helm](https://helm.sh/) chart (https://github.com/k8s-at-home/charts/tree/master/charts/stable/protonmail-bridge) created by [@Eagleman7](https://github.com/Eagleman7). More details can be found in [#23](https://github.com/shenxn/protonmail-bridge-docker/issues/23).
-
-If you don't want to use Helm, you can also reference to the guide ([#6](https://github.com/shenxn/protonmail-bridge-docker/issues/6)) written by [@ghudgins](https://github.com/ghudgins).
+See the included [docker-compose.yml](docker-compose.yml) for a working example.
 
 ## Security
 
-Please be aware that running the command above will expose your bridge to the network. Remember to use firewall if you are going to run this in an untrusted network or on a machine that has public IP address. You can also use the following command to publish the port to only localhost, which is the same behavior as the official bridge package.
+Running the commands above exposes the bridge on all network interfaces. If you are on an untrusted network or a machine with a public IP, restrict the ports to localhost:
 
 ```
-docker run -d --name=protonmail-bridge -v protonmail:/root -p 127.0.0.1:1025:25/tcp -p 127.0.0.1:1143:143/tcp --restart=unless-stopped shenxn/protonmail-bridge
+docker run -d \
+  --name=protonmail-bridge \
+  -v protonmail:/root \
+  -p 127.0.0.1:1025:25/tcp \
+  -p 127.0.0.1:1143:143/tcp \
+  --restart=unless-stopped \
+  dancwilliams/protonmail-bridge
 ```
 
-Besides, you can publish only port 25 (SMTP) if you don't need to receive any email (e.g. as a email notification service).
+If you only need outgoing email (e.g. for notifications), you can omit port `1143` (IMAP) entirely.
 
-## Compatibility
+For security vulnerability reporting, see [SECURITY.md](SECURITY.md).
 
-The bridge currently only supports some of the email clients. More details can be found on the official website. I've tested this on a Synology DiskStation and it runs well. However, you may need ssh onto it to run the interactive docker command to add your account. The main reason of using this instead of environment variables is that it seems to be the best way to support two-factor authentication.
+## Kubernetes
+
+A [Helm chart](https://github.com/k8s-at-home/charts/tree/master/charts/stable/protonmail-bridge) is available for Kubernetes deployments. See the upstream issue [#23](https://github.com/shenxn/protonmail-bridge-docker/issues/23) for details.
+
+For a non-Helm approach, see the guide in upstream issue [#6](https://github.com/shenxn/protonmail-bridge-docker/issues/6).
 
 ## Bridge CLI Guide
 
-The initialization step exposes the bridge CLI so you can do things like switch between combined and split mode, change proxy, etc. The [official guide](https://protonmail.com/support/knowledge-base/bridge-cli-guide/) gives more information on to use the CLI.
+The `init` step drops you into the bridge CLI, which can also be used to switch between combined and split address mode, configure a proxy, and more. See the [official CLI guide](https://proton.me/support/bridge-cli-guide) for details.
 
-## Build
+## Building locally
 
-For anyone who want to build this container on your own (for development or security concerns), here is the guide to do so. First, you need to `cd` into the directory (`deb` or `build`, depending on which type of image you want). Then just run the docker build command
+To build the image yourself:
+
 ```
-docker build .
+cd build
+docker build --build-arg version=v3.22.0 -t protonmail-bridge .
 ```
 
-That's it. The `Dockerfile` and bash scripts handle all the downloading, building, and packing. You can also add tags, push to your favorite docker registry, or use `buildx` to build multi architecture images.
+Replace `v3.22.0` with the desired [Proton Bridge release tag](https://github.com/ProtonMail/proton-bridge/releases).
+
+## Version updates
+
+This repository checks for new Proton Bridge releases daily. When a new version is detected, the `VERSION` file is updated automatically and a new multi-arch image is built and pushed to Docker Hub and GHCR. No manual intervention is required.
+
+## Credits
+
+Originally created by [shenxn](https://github.com/shenxn). Scripts originally based on work by [Hendrik Meyer](https://gitlab.com/T4cC0re/protonmail-bridge-docker).
