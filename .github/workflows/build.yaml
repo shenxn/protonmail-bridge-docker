@@ -31,6 +31,9 @@ jobs:
       - name: Set version
         run: echo "version=$(cat VERSION)" >> $GITHUB_ENV
 
+      - name: Sanitize ref for Docker tag
+        run: echo "SAFE_TAG=$(echo "${GITHUB_HEAD_REF:-$GITHUB_REF_NAME}" | tr '/' '-')" >> $GITHUB_ENV
+
       - name: Docker meta
         id: meta
         uses: docker/metadata-action@v5
@@ -55,7 +58,7 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           context: ./build
           file: ./build/Dockerfile
-          tags: "${{ env.DOCKER_REPO_DEV }}:dev-${{ github.ref_name }}"
+          tags: "${{ env.DOCKER_REPO_DEV }}:dev-${{ env.SAFE_TAG }}"
           push: true
           build-args: |
             version=${{ env.version }}
@@ -63,7 +66,7 @@ jobs:
       - name: Run Trivy vulnerability scan
         uses: aquasecurity/trivy-action@0.30.0
         with:
-          image-ref: "${{ env.DOCKER_REPO_DEV }}:dev-${{ github.ref_name }}"
+          image-ref: "${{ env.DOCKER_REPO_DEV }}:dev-${{ env.SAFE_TAG }}"
           format: 'sarif'
           exit-code: 0
           severity: 'CRITICAL,HIGH'
