@@ -101,9 +101,9 @@ jobs:
           echo "PLATFORM_PAIR=${platform//\//-}" >> $GITHUB_ENV
           # debian:bookworm-slim has no riscv64 image; fall back to sid-slim for that platform
           if [ "$platform" = "linux/riscv64" ]; then
-            echo "RUNTIME_IMAGE=debian:sid-slim@sha256:a145cf2bc72431523b8f5d152e9cbcc20cfaeccdb7626802f5ce6fb31a6f58bb" >> $GITHUB_ENV
+            echo "RUNTIME_IMAGE=debian:sid-slim@sha256:30128782ec2a5b0595723b21ee6be29adc2959a97fbff2b7cf5f582d28a5464b" >> $GITHUB_ENV
           else
-            echo "RUNTIME_IMAGE=debian:bookworm-slim@sha256:74a21da88cf4b2e8fde34558376153c5cd80b00ca81da2e659387e76524edc73" >> $GITHUB_ENV
+            echo "RUNTIME_IMAGE=debian:bookworm-slim@sha256:74d56e3931e0d5a1dd51f8c8a2466d21de84a271cd3b5a733b803aa91abf4421" >> $GITHUB_ENV
           fi
 
       - name: Set version
