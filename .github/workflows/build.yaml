@@ -64,7 +64,7 @@ jobs:
             version=${{ env.version }}
 
       - name: Run Trivy vulnerability scan
-        uses: aquasecurity/trivy-action@0.30.0
+        uses: aquasecurity/trivy-action@0.34.1
         with:
           image-ref: "${{ env.DOCKER_REPO_DEV }}:dev-${{ env.SAFE_TAG }}"
           format: 'sarif'
@@ -208,7 +208,7 @@ jobs:
             $(printf '${{ env.DOCKERHUB_REPO }}@sha256:%s ' *)
 
       - name: Run Trivy vulnerability scan
-        uses: aquasecurity/trivy-action@0.30.0
+        uses: aquasecurity/trivy-action@0.34.1
         with:
           image-ref: "${{ env.DOCKERHUB_REPO }}:${{ env.version }}"
           format: 'sarif'
