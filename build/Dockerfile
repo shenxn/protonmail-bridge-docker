@@ -28,7 +28,7 @@ HEALTHCHECK --interval=30s --timeout=10s --retries=3 --start-period=60s \
 
 # Install runtime dependencies
 RUN apt-get -o Acquire::http::Timeout=30 update \
-    && apt-get -o Acquire::http::Timeout=30 install -y --no-install-recommends socat pass libsecret-1-0 libfido2-1 ca-certificates \
+    && apt-get -o Acquire::http::Timeout=30 install -y --no-install-recommends socat pass libsecret-1-0 libfido2-1 ca-certificates procps \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy bash scripts
