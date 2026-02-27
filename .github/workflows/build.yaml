@@ -7,10 +7,6 @@ on:
       - build/*
       - VERSION
   pull_request:
-    paths:
-      - .github/workflows/build.yaml
-      - build/*
-      - VERSION
   workflow_dispatch:
 
 env:
@@ -20,10 +16,27 @@ env:
   PLATFORMS: linux/amd64,linux/arm64/v8,linux/riscv64
 
 jobs:
+  changes:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    outputs:
+      build: ${{ steps.filter.outputs.build }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            build:
+              - '.github/workflows/build.yaml'
+              - 'build/**'
+              - 'VERSION'
+
   test:
+    needs: changes
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    if: github.ref != 'refs/heads/master'
+    if: github.event_name == 'pull_request' && needs.changes.outputs.build == 'true'
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -225,3 +238,10 @@ jobs:
         run: |
           docker buildx imagetools inspect ${{ env.DOCKERHUB_REPO }}:${{ env.version }}
           docker buildx imagetools inspect ${{ env.GHCR_REPO }}:${{ env.version }}
+
+  ci-required:
+    if: ${{ failure() || cancelled() }}
+    needs: [changes, test]
+    runs-on: ubuntu-latest
+    steps:
+      - run: exit 1

@@ -6,16 +6,32 @@ on:
       - .github/workflows/update-check.yaml
       - update-check.py
   pull_request:
-    paths:
-      - .github/workflows/update-check.yaml
-      - update-check.py
   schedule:
   - cron: '0 0 * * *'  # runs every day at midnight UTC
   workflow_dispatch:
 
 jobs:
-  check:
+  changes:
     runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    outputs:
+      update-check: ${{ steps.filter.outputs.update-check }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            update-check:
+              - '.github/workflows/update-check.yaml'
+              - 'update-check.py'
+
+  check:
+    needs: changes
+    runs-on: ubuntu-latest
+    if: |
+      github.event_name != 'pull_request' ||
+      needs.changes.outputs.update-check == 'true'
     steps:
     - name: Checkout
       uses: actions/checkout@v6
@@ -28,3 +44,10 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.PERSONAL_TOKEN }}
         GITHUB_REPOSITORY: ${{ github.repository }}
       run: python3 update-check.py ${{ github.event_name == 'pull_request' }}
+
+  ci-required:
+    if: ${{ failure() || cancelled() }}
+    needs: [changes, check]
+    runs-on: ubuntu-latest
+    steps:
+      - run: exit 1
