@@ -1,7 +1,7 @@
 ### The Deb install is just a repack of the official ProtonMail Bridge deb package with less dependencies.
 ### I recommend you don't use this. It's here for legacy reasons.
 
-FROM debian:sid-slim AS build
+FROM debian:trixie-slim AS build
 
 COPY install.sh PACKAGE /
 RUN apt-get update && apt-get install -y wget binutils
@@ -9,7 +9,7 @@ RUN apt-get update && apt-get install -y wget binutils
 # Repack deb (removes unnecessary dependencies and produces /protonmail.deb)
 RUN bash /install.sh
 
-FROM debian:sid-slim
+FROM debian:trixie-slim
 LABEL maintainer="Trent Maetzold <trent@trkm.io>"
 LABEL org.opencontainers.image.source="https://github.com/trent-maetzold/protonmail-bridge-docker"
 

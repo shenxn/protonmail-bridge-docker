@@ -4,19 +4,21 @@
 
 ![build badge](https://github.com/trent-maetzold/protonmail-bridge-docker/workflows/build%20from%20source/badge.svg)
 
-This is an unofficial Docker container of the [ProtonMail Bridge](https://protonmail.com/bridge/). Some of the scripts are based on [Hendrik Meyer's work](https://gitlab.com/T4cC0re/protonmail-bridge-docker).
+This is an unofficial Docker container of the [ProtonMail Bridge](https://protonmail.com/bridge/).
 
 GHCR: `ghcr.io/trent-maetzold/protonmail-bridge`
 
 ## Changes from upstream
 
 - Fixed build for proton-bridge v3.22+ (added `libfido2` dependency)
+- Switched base image from `debian:sid` to `debian:trixie` (stable)
 - Removed DockerHub publishing (GHCR only)
 - Removed Gitee mirror workflow
+- Merged version check into build workflow with scheduled auto-update
 - Updated all GitHub Actions to current versions
 - Replaced deprecated Anchore scan with Trivy
 - Default docker-compose binds to localhost only (security)
-- Updated maintainer labels
+- Updated maintainer labels and security policy
 
 ## ARM Support
 
@@ -30,8 +32,7 @@ There are two types of images:
 
 | tag | description |
 | -- | -- |
-| `latest` | latest `deb` image |
-| `[version]` | `deb` images |
+| `latest` | latest `build` image |
 | `build` | latest `build` image |
 | `[version]-build` | `build` images |
 
@@ -81,3 +82,11 @@ To build locally:
 cd build
 docker build --build-arg version=v3.22.0 .
 ```
+
+## Acknowledgments
+
+This project is a fork of [shenxn/protonmail-bridge-docker](https://github.com/shenxn/protonmail-bridge-docker) by [Xiaonan Shen](https://github.com/shenxn), which provided the original Dockerfiles, entrypoint scripts, and CI pipeline. Some scripts are based on [Hendrik Meyer's work](https://gitlab.com/T4cC0re/protonmail-bridge-docker).
+
+## License
+
+[GPLv3](LICENSE)
