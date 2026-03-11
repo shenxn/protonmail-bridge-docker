@@ -11,6 +11,11 @@ on:
       - build/*
   workflow_dispatch:
 
+permissions:
+  contents: read
+  packages: write
+  security-events: write
+
 env:
   GHCR_REPO: ghcr.io/trent-maetzold/protonmail-bridge
 
