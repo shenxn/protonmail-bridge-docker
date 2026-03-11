@@ -13,67 +13,65 @@ on:
   workflow_dispatch:
 
 env:
-  DOCKER_REPO: shenxn/protonmail-bridge
-  DOCKER_REPO_DEV: ghcr.io/shenxn/protonmail-bridge-dev
+  GHCR_REPO: ghcr.io/trent-maetzold/protonmail-bridge
 
 jobs:
   deb:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@master
+        uses: actions/checkout@v4
+
       - name: Set version
-        id: version
-        run: echo "version=`cat VERSION`" >> $GITHUB_ENV
-      - name: Set repo
-        id: repo
-        run: if [[ $GITHUB_REF == "refs/heads/master" ]]; then echo "::set-output name=repo::${DOCKER_REPO}"; else echo "::set-output name=repo::${DOCKER_REPO_DEV}"; fi
+        run: echo "version=$(cat VERSION)" >> $GITHUB_ENV
+
       - name: Docker meta
-        id: docker_meta
-        uses: crazy-max/ghaction-docker-meta@v1
+        id: meta
+        uses: docker/metadata-action@v5
         with:
-          images: ${{ steps.repo.outputs.repo }}
+          images: ${{ env.GHCR_REPO }}
+
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
+        uses: docker/setup-buildx-action@v3
+
       - name: Build image without push
-        uses: docker/build-push-action@v2
+        uses: docker/build-push-action@v6
         with:
           context: ./deb
           file: ./deb/Dockerfile
           load: true
           tags: protonmail-bridge:latest
-      - name: Scan image
-        id: scan
-        uses: anchore/scan-action@v2
+
+      - name: Run Trivy vulnerability scan
+        uses: aquasecurity/trivy-action@0.30.0
         with:
-          image: protonmail-bridge:latest
-          fail-build: true
-          severity-cutoff: critical
-          acs-report-enable: true
-      - name: Upload Anchore scan SARIF report
+          image-ref: protonmail-bridge:latest
+          format: 'sarif'
+          exit-code: 0
+          severity: 'CRITICAL,HIGH'
+          output: 'trivy-results.sarif'
+
+      - name: Upload Trivy scan SARIF report
         uses: github/codeql-action/upload-sarif@v3
         with:
-          sarif_file: ${{ steps.scan.outputs.sarif }}
-      - name: Login to DockerHub
-        uses: docker/login-action@v1
-        if: ${{ github.event_name != 'pull_request' }}
-        with:
-          username: ${{ secrets.REGISTRY_USERNAME }}
-          password: ${{ secrets.REGISTRY_PASSWORD }}
-      - name: Login to GitHub Container Registry
-        uses: docker/login-action@v1
-        if: ${{ github.event_name != 'pull_request' }}
+          sarif_file: 'trivy-results.sarif'
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        if: github.event_name != 'pull_request'
         with:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
-          password: ${{ secrets.CR_PAT }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Push image
-        uses: docker/build-push-action@v2
+        uses: docker/build-push-action@v6
+        if: github.event_name != 'pull_request'
         with:
           context: ./deb
           file: ./deb/Dockerfile
           tags: |
-            ${{ steps.repo.outputs.repo }}:latest
-            ${{ steps.repo.outputs.repo }}:${{ env.version }}
-          labels: ${{ steps.docker_meta.outputs.labels }}
-          push: ${{ github.event_name != 'pull_request' }}
+            ${{ env.GHCR_REPO }}:latest
+            ${{ env.GHCR_REPO }}:${{ env.version }}
+          labels: ${{ steps.meta.outputs.labels }}
+          push: true
