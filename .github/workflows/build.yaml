@@ -10,6 +10,8 @@ on:
     paths:
       - .github/workflows/build.yaml
       - build/*
+  schedule:
+    - cron: '0 6 * * *'
   workflow_dispatch:
 
 env:
@@ -17,9 +19,44 @@ env:
   PLATFORMS: linux/amd64,linux/arm64/v8,linux/arm/v7,linux/riscv64
 
 jobs:
+  version-check:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    outputs:
+      updated: ${{ steps.check.outputs.updated }}
+      version: ${{ steps.check.outputs.version }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check for new version
+        id: check
+        run: |
+          current=$(cat VERSION)
+          latest=$(curl -s https://api.github.com/repos/ProtonMail/proton-bridge/releases/latest | jq -r '.tag_name')
+          echo "Current: $current, Latest: $latest"
+          if [ "$current" != "$latest" ]; then
+            echo "$latest" > VERSION
+            echo "updated=true" >> $GITHUB_OUTPUT
+            echo "version=$latest" >> $GITHUB_OUTPUT
+          else
+            echo "Version unchanged"
+            echo "updated=false" >> $GITHUB_OUTPUT
+            echo "version=$current" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Commit version bump
+        if: steps.check.outputs.updated == 'true'
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+          git add VERSION
+          git commit -m "Bump version to ${{ steps.check.outputs.version }}"
+          git push
+
   test:
     runs-on: ubuntu-latest
-    if: github.ref != 'refs/heads/master'
+    if: github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref != 'refs/heads/master')
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -72,7 +109,11 @@ jobs:
 
   build:
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    if: |
+      (github.event_name == 'push' && github.ref == 'refs/heads/master') ||
+      (needs.version-check.result == 'success' && needs.version-check.outputs.updated == 'true')
+    needs:
+      - version-check
     strategy:
       fail-fast: false
       matrix:
@@ -84,6 +125,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          ref: master
 
       - name: Prepare
         run: |
@@ -147,6 +190,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          ref: master
 
       - name: Download digests
         uses: actions/download-artifact@v4
@@ -178,6 +223,7 @@ jobs:
           tags: |
             type=raw,enable=true,value=${{ env.version }}-build
             type=raw,enable=true,value=build
+            type=raw,enable=true,value=latest
 
       - name: Create manifest list and push
         working-directory: ${{ runner.temp }}/digests
