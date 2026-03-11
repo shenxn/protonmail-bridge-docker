@@ -45,14 +45,23 @@ jobs:
             echo "version=$current" >> $GITHUB_OUTPUT
           fi
 
-      - name: Commit version bump
+      - name: Create version bump PR
         if: steps.check.outputs.updated == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          branch="auto/bump-${{ steps.check.outputs.version }}"
           git config user.name 'github-actions[bot]'
           git config user.email 'github-actions[bot]@users.noreply.github.com'
+          git checkout -b "$branch"
           git add VERSION
           git commit -m "Bump version to ${{ steps.check.outputs.version }}"
-          git push
+          git push origin "$branch"
+          gh pr create \
+            --title "Bump proton-bridge to ${{ steps.check.outputs.version }}" \
+            --body "Auto-detected new upstream release. Merging will trigger the build pipeline." \
+            --base master \
+            --head "$branch"
 
   test:
     runs-on: ubuntu-latest
