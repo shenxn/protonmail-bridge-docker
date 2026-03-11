@@ -57,21 +57,21 @@ jobs:
         with:
           driver-opts: network=host
 
-      - name: Build and push
+      - name: Build
         uses: docker/build-push-action@v6
         with:
           labels: ${{ steps.meta.outputs.labels }}
           context: ./build
           file: ./build/Dockerfile
-          tags: "${{ env.GHCR_REPO }}:dev-pr${{ github.event.pull_request.number }}"
-          push: true
+          load: true
+          tags: "protonmail-bridge:test"
           build-args: |
             version=${{ needs.resolve-version.outputs.version }}
 
       - name: Run Trivy vulnerability scan
         uses: aquasecurity/trivy-action@0.30.0
         with:
-          image-ref: "${{ env.GHCR_REPO }}:dev-pr${{ github.event.pull_request.number }}"
+          image-ref: "protonmail-bridge:test"
           format: 'sarif'
           exit-code: 0
           severity: 'CRITICAL,HIGH'
