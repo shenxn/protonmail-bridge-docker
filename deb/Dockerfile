@@ -10,7 +10,8 @@ RUN apt-get update && apt-get install -y wget binutils
 RUN bash /install.sh
 
 FROM debian:sid-slim
-LABEL maintainer="Simon Felding <sife@adm.ku.dk>"
+LABEL maintainer="Trent Maetzold <trent@trkm.io>"
+LABEL org.opencontainers.image.source="https://github.com/trent-maetzold/protonmail-bridge-docker"
 
 EXPOSE 25/tcp
 EXPOSE 143/tcp
