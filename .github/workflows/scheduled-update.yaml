@@ -1,16 +1,8 @@
-name: Build and Push
+name: Check for new upstream release
 
 on:
-  push:
-    branches: [master]
-    paths:
-      - .github/workflows/build.yaml
-      - build/**
-  pull_request:
-    paths:
-      - .github/workflows/build.yaml
-      - build/**
-  workflow_dispatch:
+  schedule:
+    - cron: '0 6 * * *'
 
 permissions:
   contents: read
@@ -21,20 +13,34 @@ env:
   IMAGE: ghcr.io/${{ github.repository_owner }}/protonmail-bridge
 
 jobs:
-  resolve-version:
+  check:
     runs-on: ubuntu-latest
     outputs:
-      version: ${{ steps.version.outputs.version }}
+      version: ${{ steps.check.outputs.version }}
+      needed: ${{ steps.check.outputs.needed }}
     steps:
-      - name: Get latest upstream release
-        id: version
+      - name: Compare upstream to registry
+        id: check
         run: |
           version=$(curl -s https://api.github.com/repos/ProtonMail/proton-bridge/releases/latest | jq -r '.tag_name')
           echo "version=$version" >> $GITHUB_OUTPUT
-          echo "Resolved version: $version"
+
+          token=$(curl -s "https://ghcr.io/token?scope=repository:${{ github.repository_owner }}/protonmail-bridge:pull" | jq -r '.token')
+          exists=$(curl -s -o /dev/null -w '%{http_code}' \
+            -H "Authorization: Bearer $token" \
+            "https://ghcr.io/v2/${{ github.repository_owner }}/protonmail-bridge/manifests/$version")
+
+          if [ "$exists" = "200" ]; then
+            echo "needed=false" >> $GITHUB_OUTPUT
+            echo "$version already exists in registry"
+          else
+            echo "needed=true" >> $GITHUB_OUTPUT
+            echo "New version $version — building"
+          fi
 
   build:
-    needs: resolve-version
+    needs: check
+    if: needs.check.outputs.needed == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -42,28 +48,26 @@ jobs:
       - uses: docker/setup-buildx-action@v3
 
       - uses: docker/login-action@v3
-        if: github.event_name != 'pull_request'
         with:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build
+      - name: Build and push
         uses: docker/build-push-action@v6
         with:
           context: ./build
-          push: ${{ github.event_name != 'pull_request' }}
-          load: ${{ github.event_name == 'pull_request' }}
+          push: true
           tags: |
             ${{ env.IMAGE }}:latest
-            ${{ env.IMAGE }}:${{ needs.resolve-version.outputs.version }}
+            ${{ env.IMAGE }}:${{ needs.check.outputs.version }}
           build-args: |
-            version=${{ needs.resolve-version.outputs.version }}
+            version=${{ needs.check.outputs.version }}
 
       - name: Trivy scan
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: ${{ env.IMAGE }}:${{ needs.resolve-version.outputs.version }}
+          image-ref: ${{ env.IMAGE }}:${{ needs.check.outputs.version }}
           format: sarif
           output: trivy-results.sarif
           severity: CRITICAL,HIGH
