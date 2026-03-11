@@ -61,7 +61,7 @@ jobs:
             version=${{ needs.resolve-version.outputs.version }}
 
       - name: Trivy scan
-        uses: aquasecurity/trivy-action@0.35.0
+        uses: aquasecurity/trivy-action@master
         with:
           image-ref: ${{ env.IMAGE }}:${{ needs.resolve-version.outputs.version }}
           format: sarif
