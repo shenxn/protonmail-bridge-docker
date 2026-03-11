@@ -1,5 +1,5 @@
-# The build image could be golang, but it currently does not support riscv64. Only debian:sid does, at the time of writing.
-FROM debian:sid-slim AS build
+# Trixie (Debian 13) supports golang on all target platforms including riscv64.
+FROM debian:trixie-slim AS build
 
 ARG version
 
@@ -11,7 +11,7 @@ ADD https://github.com/ProtonMail/proton-bridge.git#${version} /build/
 WORKDIR /build/
 RUN make build-nogui vault-editor
 
-FROM debian:sid-slim
+FROM debian:trixie-slim
 LABEL maintainer="Trent Maetzold <trent@trkm.io>"
 LABEL org.opencontainers.image.source="https://github.com/trent-maetzold/protonmail-bridge-docker"
 
