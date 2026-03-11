@@ -5,7 +5,6 @@ on:
     paths:
       - .github/workflows/build.yaml
       - build/*
-      - VERSION
   pull_request:
     paths:
       - .github/workflows/build.yaml
@@ -21,58 +20,39 @@ env:
 jobs:
   version-check:
     runs-on: ubuntu-latest
-    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
     outputs:
-      updated: ${{ steps.check.outputs.updated }}
       version: ${{ steps.check.outputs.version }}
+      build_needed: ${{ steps.check.outputs.build_needed }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Check for new version
+      - name: Get latest upstream release
         id: check
         run: |
-          current=$(cat VERSION)
           latest=$(curl -s https://api.github.com/repos/ProtonMail/proton-bridge/releases/latest | jq -r '.tag_name')
-          echo "Current: $current, Latest: $latest"
-          if [ "$current" != "$latest" ]; then
-            echo "$latest" > VERSION
-            echo "updated=true" >> $GITHUB_OUTPUT
-            echo "version=$latest" >> $GITHUB_OUTPUT
-          else
-            echo "Version unchanged"
-            echo "updated=false" >> $GITHUB_OUTPUT
-            echo "version=$current" >> $GITHUB_OUTPUT
-          fi
+          echo "Latest upstream: $latest"
+          echo "version=$latest" >> $GITHUB_OUTPUT
 
-      - name: Create version bump PR
-        if: steps.check.outputs.updated == 'true'
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          branch="auto/bump-${{ steps.check.outputs.version }}"
-          git config user.name 'github-actions[bot]'
-          git config user.email 'github-actions[bot]@users.noreply.github.com'
-          git checkout -b "$branch"
-          git add VERSION
-          git commit -m "Bump version to ${{ steps.check.outputs.version }}"
-          git push origin "$branch"
-          pr_url=$(gh pr create \
-            --title "Bump proton-bridge to ${{ steps.check.outputs.version }}" \
-            --body "Auto-detected new upstream release." \
-            --base master \
-            --head "$branch")
-          gh pr merge "$pr_url" --squash --auto
+          if [[ "${{ github.event_name }}" == "schedule" ]]; then
+            # Check if we already have this version in GHCR
+            token=$(curl -s "https://ghcr.io/token?scope=repository:trent-maetzold/protonmail-bridge:pull" | jq -r '.token')
+            tags=$(curl -s -H "Authorization: Bearer $token" "https://ghcr.io/v2/trent-maetzold/protonmail-bridge/tags/list" | jq -r '.tags[]?' 2>/dev/null || echo "")
+            if echo "$tags" | grep -qx "${latest}-build"; then
+              echo "Version ${latest} already built"
+              echo "build_needed=false" >> $GITHUB_OUTPUT
+            else
+              echo "New version ${latest} detected"
+              echo "build_needed=true" >> $GITHUB_OUTPUT
+            fi
+          else
+            echo "build_needed=true" >> $GITHUB_OUTPUT
+          fi
 
   test:
     runs-on: ubuntu-latest
+    needs: version-check
     if: github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref != 'refs/heads/master')
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
-      - name: Set version
-        run: echo "version=$(cat VERSION)" >> $GITHUB_ENV
 
       - name: Docker meta
         id: meta
@@ -101,7 +81,7 @@ jobs:
           tags: "${{ env.GHCR_REPO }}:dev-${{ github.ref_name }}"
           push: true
           build-args: |
-            version=${{ env.version }}
+            version=${{ needs.version-check.outputs.version }}
 
       - name: Run Trivy vulnerability scan
         uses: aquasecurity/trivy-action@0.30.0
@@ -119,11 +99,11 @@ jobs:
 
   build:
     runs-on: ubuntu-latest
+    needs: version-check
     if: |
-      (github.event_name == 'push' && github.ref == 'refs/heads/master') ||
-      (needs.version-check.result == 'success' && needs.version-check.outputs.updated == 'true')
-    needs:
-      - version-check
+      needs.version-check.outputs.build_needed == 'true' &&
+      (github.event_name != 'pull_request') &&
+      (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.ref == 'refs/heads/master'))
     strategy:
       fail-fast: false
       matrix:
@@ -135,16 +115,11 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          ref: master
 
       - name: Prepare
         run: |
           platform=${{ matrix.platform }}
           echo "PLATFORM_PAIR=${platform//\//-}" >> $GITHUB_ENV
-
-      - name: Set version
-        run: echo "version=$(cat VERSION)" >> $GITHUB_ENV
 
       - name: Docker meta
         id: meta
@@ -177,7 +152,7 @@ jobs:
           provenance: false
           sbom: false
           build-args: |
-            version=${{ env.version }}
+            version=${{ needs.version-check.outputs.version }}
 
       - name: Export digest
         run: |
@@ -196,22 +171,15 @@ jobs:
   merge:
     runs-on: ubuntu-latest
     needs:
+      - version-check
       - build
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          ref: master
-
       - name: Download digests
         uses: actions/download-artifact@v4
         with:
           path: ${{ runner.temp }}/digests
           pattern: digests-*
           merge-multiple: true
-
-      - name: Set version
-        run: echo "version=$(cat VERSION)" >> $GITHUB_ENV
 
       - name: Login to GHCR
         uses: docker/login-action@v3
@@ -231,7 +199,7 @@ jobs:
         with:
           images: ${{ env.GHCR_REPO }}
           tags: |
-            type=raw,enable=true,value=${{ env.version }}-build
+            type=raw,enable=true,value=${{ needs.version-check.outputs.version }}-build
             type=raw,enable=true,value=build
             type=raw,enable=true,value=latest
 
@@ -244,7 +212,7 @@ jobs:
       - name: Run Trivy vulnerability scan
         uses: aquasecurity/trivy-action@0.30.0
         with:
-          image-ref: "${{ env.GHCR_REPO }}:${{ env.version }}-build"
+          image-ref: "${{ env.GHCR_REPO }}:${{ needs.version-check.outputs.version }}-build"
           format: 'sarif'
           exit-code: 0
           severity: 'CRITICAL,HIGH'
@@ -257,4 +225,4 @@ jobs:
 
       - name: Inspect image
         run: |
-          docker buildx imagetools inspect ${{ env.GHCR_REPO }}:${{ steps.meta.outputs.version }}
+          docker buildx imagetools inspect ${{ env.GHCR_REPO }}:${{ needs.version-check.outputs.version }}-build
