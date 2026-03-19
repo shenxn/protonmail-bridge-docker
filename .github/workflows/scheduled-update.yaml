@@ -1,4 +1,4 @@
-name: Check for new upstream release
+name: Scheduled Update
 
 on:
   schedule:

@@ -1,0 +1,145 @@
+name: Deploy
+
+on:
+  push:
+    branches: [master]
+
+permissions:
+  contents: read
+  packages: write
+  security-events: write
+
+env:
+  IMAGE: ghcr.io/${{ github.repository_owner }}/protonmail-bridge
+
+jobs:
+  detect-trigger:
+    runs-on: ubuntu-latest
+    outputs:
+      is_merge: ${{ steps.check.outputs.is_merge }}
+      pr_number: ${{ steps.check.outputs.pr_number }}
+    steps:
+      - name: Check if this push is from a merged PR
+        id: check
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const prs = await github.rest.repos.listPullRequestsAssociatedWithCommit({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              commit_sha: context.sha
+            });
+            const merged = prs.data.find(pr => pr.merged_at !== null);
+            if (merged) {
+              core.setOutput('is_merge', 'true');
+              core.setOutput('pr_number', merged.number);
+              core.info(`Merged PR #${merged.number}`);
+            } else {
+              core.setOutput('is_merge', 'false');
+              core.info('Direct push to master');
+            }
+
+  # Merge path: retag the staging image that CI already built and scanned
+  promote:
+    needs: detect-trigger
+    if: needs.detect-trigger.outputs.is_merge == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get latest upstream release
+        id: version
+        run: |
+          version=$(curl -s https://api.github.com/repos/ProtonMail/proton-bridge/releases/latest | jq -r '.tag_name')
+          echo "version=$version" >> $GITHUB_OUTPUT
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Retag staging image to production
+        run: |
+          docker buildx imagetools create \
+            --tag ${{ env.IMAGE }}:latest \
+            --tag ${{ env.IMAGE }}:${{ steps.version.outputs.version }} \
+            ${{ env.IMAGE }}:pr-${{ needs.detect-trigger.outputs.pr_number }}
+
+      - name: Delete staging tag
+        continue-on-error: true
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const owner = context.repo.owner;
+            const prTag = 'pr-${{ needs.detect-trigger.outputs.pr_number }}';
+
+            const versions = await github.rest.packages.getAllPackageVersionsForPackageOwnedByUser({
+              package_type: 'container',
+              package_name: 'protonmail-bridge',
+              username: owner,
+              per_page: 100
+            });
+
+            const staging = versions.data.find(v =>
+              v.metadata?.container?.tags?.includes(prTag)
+            );
+
+            if (staging) {
+              await github.rest.packages.deletePackageVersionForUser({
+                package_type: 'container',
+                package_name: 'protonmail-bridge',
+                username: owner,
+                package_version_id: staging.id
+              });
+              core.info(`Deleted staging tag ${prTag}`);
+            } else {
+              core.info(`Staging tag ${prTag} not found, skipping cleanup`);
+            }
+
+  # Direct push path: full build pipeline (should be blocked by branch protection)
+  build:
+    needs: detect-trigger
+    if: needs.detect-trigger.outputs.is_merge == 'false'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get latest upstream release
+        id: version
+        run: |
+          version=$(curl -s https://api.github.com/repos/ProtonMail/proton-bridge/releases/latest | jq -r '.tag_name')
+          echo "version=$version" >> $GITHUB_OUTPUT
+
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: ./build
+          push: true
+          tags: |
+            ${{ env.IMAGE }}:latest
+            ${{ env.IMAGE }}:${{ steps.version.outputs.version }}
+          build-args: |
+            version=${{ steps.version.outputs.version }}
+
+      - name: Trivy scan
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ env.IMAGE }}:${{ steps.version.outputs.version }}
+          format: sarif
+          output: trivy-results.sarif
+          severity: CRITICAL,HIGH
+
+      - name: Upload Trivy results
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: trivy-results.sarif
