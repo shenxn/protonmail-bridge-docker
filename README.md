@@ -43,7 +43,7 @@ If you want to use Docker Compose instead, you can create a copy of the provided
 docker compose run protonmail-bridge init
 ```
 
-Wait for the bridge to startup, then you will see a prompt appear for [Proton Mail Bridge interactive shell](https://proton.me/support/bridge-cli-guide). Use the `login` command and follow the instructions to add your account into the bridge. Then use `info` to see the configuration information (username and password). After that, use `exit` to exit the bridge. You may need `CTRL+C` to exit the docker entirely.
+Wait for the bridge to startup, then you will see a prompt appear for [Proton Mail Bridge interactive shell](https://proton.me/support/bridge-cli-guide). Inside that console, use the `login` command and follow the instructions to add your account into the bridge. Then use `info` to see the configuration information (username and password). After that, use `exit` to exit the bridge. You may need `CTRL+C` to exit the docker entirely.
 
 ## Run
 
@@ -74,6 +74,8 @@ docker run -d --name=protonmail-bridge -v protonmail:/root -p 127.0.0.1:1025:25/
 ```
 
 Besides, you can publish only port 25 (SMTP) if you don't need to receive any email (e.g. as a email notification service).
+
+The container uses root but if you want to go rootless, there are PR you might want to look at ([#110](https://github.com/shenxn/protonmail-bridge-docker/pull/110), [#69](https://github.com/shenxn/protonmail-bridge-docker/pull/69)).
 
 ## Compatibility
 
