@@ -41,6 +41,7 @@ RUN apt-get update \
          dtach)  apt-get install -y --no-install-recommends dtach  ;; \
          abduco) apt-get install -y --no-install-recommends abduco ;; \
          reptyr) apt-get install -y --no-install-recommends reptyr ;; \
+         *) echo "Unsupported PTY_TOOL: ${PTY_TOOL}. Supported values are: dtach, abduco, reptyr." >&2; exit 1 ;; \
        esac \
     && chmod +x /protonmail/entrypoint.sh \
     && rm -rf /var/lib/apt/lists/*
