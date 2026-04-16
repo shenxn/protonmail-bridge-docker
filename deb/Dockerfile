@@ -26,7 +26,7 @@ COPY gpgparams entrypoint.sh PACKAGE /protonmail/
 COPY --from=build /protonmail.deb /tmp/protonmail.deb
 
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends /tmp/protonmail.deb socat pass libsecret-1-0 ca-certificates procps \
+    && apt-get install -y --no-install-recommends /tmp/protonmail.deb socat pass libsecret-1-0 libfido2-1 ca-certificates procps \
     && case "${PTY_TOOL}" in \
          dtach)  apt-get install -y --no-install-recommends dtach  ;; \
          abduco) apt-get install -y --no-install-recommends abduco ;; \
@@ -37,7 +37,7 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 HEALTHCHECK --interval=30s --timeout=5s --retries=3 --start-period=120s \
-  CMD /bin/bash -c "true < /dev/tcp/127.0.0.1/25 && true < /dev/tcp/127.0.0.1/143 && true < /dev/tcp/127.0.0.1/1025 && true < /dev/tcp/127.0.0.1/1143"
+  CMD /bin/bash -c "true < /dev/tcp/localhost/25 && true < /dev/tcp/localhost/143 && true < /dev/tcp/localhost/1025 && true < /dev/tcp/localhost/1143"
 
 ENTRYPOINT ["/protonmail/entrypoint.sh"]
 CMD ["run"]
