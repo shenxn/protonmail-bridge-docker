@@ -6,6 +6,20 @@ PTY_TOOL="${PTY_TOOL:-dtach}"
 BRIDGE_SOCK=/protonmail/bridge.sock
 BRIDGE_PID_FILE=/protonmail/bridge.pid
 
+# Validate PTY_TOOL early and ensure the selected binary is present.
+case "${PTY_TOOL}" in
+    dtach|abduco|reptyr)
+        if ! command -v "${PTY_TOOL}" &>/dev/null; then
+            echo "ERROR: PTY_TOOL=${PTY_TOOL} but '${PTY_TOOL}' was not found in PATH." >&2
+            exit 1
+        fi
+        ;;
+    *)
+        echo "ERROR: PTY_TOOL=${PTY_TOOL} is not supported. Valid values: dtach, abduco, reptyr." >&2
+        exit 1
+        ;;
+esac
+
 # Clean stale gpg-agent sockets left from a previous run
 rm -f /root/.gnupg/S.gpg-agent* 2>/dev/null || true
 
@@ -17,6 +31,7 @@ pty_start() {
         abduco) abduco -n bridge "$@" ;;
         # reptyr re-attaches existing PIDs; use nohup+setsid to launch headlessly instead
         reptyr) setsid "$@" </dev/null &>/dev/null & echo $! > "${BRIDGE_PID_FILE}" ;;
+        *)      echo "ERROR: pty_start: unsupported PTY_TOOL=${PTY_TOOL}" >&2; exit 1 ;;
     esac
 }
 
@@ -25,6 +40,7 @@ pty_attach() {
         dtach)  exec dtach -a "${BRIDGE_SOCK}" -e '^\' ;;
         abduco) exec abduco -a bridge ;;
         reptyr) exec reptyr "$(cat "${BRIDGE_PID_FILE}")" ;;
+        *)      echo "ERROR: pty_attach: unsupported PTY_TOOL=${PTY_TOOL}" >&2; exit 1 ;;
     esac
 }
 
@@ -32,17 +48,25 @@ detach_hint() {
     case "${PTY_TOOL}" in
         dtach|abduco) echo "Ctrl+\\" ;;
         reptyr)       echo "Ctrl+C" ;;
+        *)            echo "(unknown)" ;;
     esac
 }
 
-# Wait up to $1 seconds for the bridge socket (or PID file) to appear
+# True if the abduco session named 'bridge' is listed as running.
+abduco_session_alive() {
+    abduco -l 2>/dev/null | grep -qw 'bridge'
+}
+
+# Wait up to $1 seconds for the bridge session (socket or PID file) to appear.
 wait_for_session() {
     local timeout="${1:-10}"
     local elapsed=0
     while [[ "${elapsed}" -lt "${timeout}" ]]; do
         case "${PTY_TOOL}" in
-            dtach|abduco) [[ -S "${BRIDGE_SOCK}" ]] && return 0 ;;
-            reptyr)       [[ -f "${BRIDGE_PID_FILE}" ]] && return 0 ;;
+            dtach)  [[ -S "${BRIDGE_SOCK}" ]]  && return 0 ;;
+            abduco) abduco_session_alive        && return 0 ;;
+            reptyr) [[ -f "${BRIDGE_PID_FILE}" ]] && return 0 ;;
+            *)      echo "ERROR: wait_for_session: unsupported PTY_TOOL=${PTY_TOOL}" >&2; exit 1 ;;
         esac
         sleep 1
         (( elapsed++ )) || true
@@ -88,8 +112,10 @@ case "${CMD}" in
             # No tty: wait until the bridge session disappears then exit cleanly.
             while true; do
                 case "${PTY_TOOL}" in
-                    dtach|abduco) [[ -S "${BRIDGE_SOCK}" ]] || break ;;
-                    reptyr)       kill -0 "$(cat "${BRIDGE_PID_FILE}" 2>/dev/null)" 2>/dev/null || break ;;
+                    dtach)  [[ -S "${BRIDGE_SOCK}" ]] || break ;;
+                    abduco) abduco_session_alive       || break ;;
+                    reptyr) kill -0 "$(cat "${BRIDGE_PID_FILE}" 2>/dev/null)" 2>/dev/null || break ;;
+                    *)      echo "ERROR: manage loop: unsupported PTY_TOOL=${PTY_TOOL}" >&2; exit 1 ;;
                 esac
                 sleep 2
             done
@@ -99,19 +125,30 @@ case "${CMD}" in
     attach)
         # Reattach to a running manage session.
         case "${PTY_TOOL}" in
-            dtach|abduco)
+            dtach)
                 if [[ ! -S "${BRIDGE_SOCK}" ]]; then
-                    echo "ERROR: No active session found (${BRIDGE_SOCK} does not exist)." >&2
-                    echo "       Start one first: docker exec -it \$(hostname) /protonmail/entrypoint.sh manage" >&2
+                    echo "ERROR: No active dtach session found (${BRIDGE_SOCK} does not exist)." >&2
+                    echo "       Start one first: docker exec -it <container> /protonmail/entrypoint.sh manage" >&2
+                    exit 1
+                fi
+                ;;
+            abduco)
+                if ! abduco_session_alive; then
+                    echo "ERROR: No active abduco session 'bridge' found." >&2
+                    echo "       Start one first: docker exec -it <container> /protonmail/entrypoint.sh manage" >&2
                     exit 1
                 fi
                 ;;
             reptyr)
                 if [[ ! -f "${BRIDGE_PID_FILE}" ]]; then
                     echo "ERROR: No active session found (${BRIDGE_PID_FILE} does not exist)." >&2
-                    echo "       Start one first: docker exec -it \$(hostname) /protonmail/entrypoint.sh manage" >&2
+                    echo "       Start one first: docker exec -it <container> /protonmail/entrypoint.sh manage" >&2
                     exit 1
                 fi
+                ;;
+            *)
+                echo "ERROR: attach: unsupported PTY_TOOL=${PTY_TOOL}" >&2
+                exit 1
                 ;;
         esac
         pty_attach
@@ -120,6 +157,25 @@ case "${CMD}" in
     run)
         # Daemon mode: --noninteractive runs headless, output goes directly to docker logs.
         CONTAINER_ID=$(hostname)
+
+        # Cleanup handler: forward SIGTERM/SIGINT and reap child processes cleanly.
+        # As PID 1, without this Docker's SIGTERM would leave children running until
+        # the kill timeout expires.
+        BRIDGE_PID=
+        SOCAT_SMTP_PID=
+        SOCAT_IMAP_PID=
+        _cleanup_done=0
+        cleanup() {
+            [[ "${_cleanup_done}" -eq 1 ]] && return
+            _cleanup_done=1
+            echo "  Shutting down bridge and port-forwards..." >&2
+            [[ -n "${BRIDGE_PID:-}" ]]     && kill "${BRIDGE_PID}"     2>/dev/null || true
+            [[ -n "${SOCAT_SMTP_PID:-}" ]] && kill "${SOCAT_SMTP_PID}" 2>/dev/null || true
+            [[ -n "${SOCAT_IMAP_PID:-}" ]] && kill "${SOCAT_IMAP_PID}" 2>/dev/null || true
+            wait 2>/dev/null || true
+        }
+        trap cleanup EXIT SIGTERM SIGINT
+
         echo "========================================"
         echo "  ProtonMail Bridge daemon starting..."
         echo "  Container: ${CONTAINER_ID}"
@@ -132,7 +188,7 @@ case "${CMD}" in
         echo "      docker run -it --rm -v <data-volume> <image> manage"
         echo ""
         echo "    Attach to a running manage session:"
-        echo "      docker exec -it ${CONTAINER_ID} /protonmail/entrypoint.sh attach"
+        echo "      docker exec -it <container> /protonmail/entrypoint.sh attach"
         echo ""
         echo "    View logs:"
         echo "      docker logs -f ${CONTAINER_ID}"
@@ -143,16 +199,20 @@ case "${CMD}" in
         /protonmail/proton-bridge --noninteractive &
         BRIDGE_PID=$!
 
-        # Wait for bridge to open its local SMTP and IMAP ports (up to 60s)
+        # Wait for bridge to open its local SMTP and IMAP ports (up to 60s).
+        # Abort immediately if the bridge process exits before the port is ready.
         echo "  Waiting for bridge ports 1025/1143..."
         for port in 1025 1143; do
             elapsed=0
             until socat -u OPEN:/dev/null TCP:127.0.0.1:${port} 2>/dev/null; do
+                if ! kill -0 "${BRIDGE_PID}" 2>/dev/null; then
+                    echo "ERROR: bridge process (pid ${BRIDGE_PID}) exited before port ${port} became ready." >&2
+                    exit 1
+                fi
                 sleep 1
                 (( elapsed++ )) || true
                 if [[ "${elapsed}" -ge 60 ]]; then
                     echo "ERROR: bridge port ${port} did not open within 60s." >&2
-                    kill "${BRIDGE_PID}" 2>/dev/null || true
                     exit 1
                 fi
             done
@@ -171,14 +231,12 @@ case "${CMD}" in
         for pid in "${SOCAT_SMTP_PID}" "${SOCAT_IMAP_PID}"; do
             if ! kill -0 "${pid}" 2>/dev/null; then
                 echo "ERROR: socat port-forward (pid ${pid}) failed to start." >&2
-                kill "${BRIDGE_PID}" 2>/dev/null || true
                 exit 1
             fi
         done
 
-        # Wait on bridge; if it exits, bring down socat too.
+        # Wait on bridge; EXIT trap will bring down socat when bridge exits.
         wait "${BRIDGE_PID}"
-        kill "${SOCAT_SMTP_PID}" "${SOCAT_IMAP_PID}" 2>/dev/null || true
         ;;
 
     *)
