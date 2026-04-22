@@ -31,13 +31,17 @@ RUN apt-get update \
          dtach)  apt-get install -y --no-install-recommends dtach  ;; \
          abduco) apt-get install -y --no-install-recommends abduco ;; \
          reptyr) apt-get install -y --no-install-recommends reptyr ;; \
-         *) echo "Unsupported PTY_TOOL: ${PTY_TOOL}. Supported values are: dtach, abduco, reptyr." >&2; exit 1 ;; \
+         *) echo "Unsupported PTY_TOOL: ${PTY_TOOL}. Supported: dtach, abduco, reptyr." >&2 ; exit 1 ;; \
        esac \
     && chmod +x /protonmail/entrypoint.sh \
     && rm -rf /var/lib/apt/lists/*
 
 HEALTHCHECK --interval=30s --timeout=5s --retries=3 --start-period=120s \
-  CMD /bin/bash -c "true < /dev/tcp/localhost/25 && true < /dev/tcp/localhost/143 && true < /dev/tcp/localhost/1025 && true < /dev/tcp/localhost/1143"
+  CMD /bin/bash -c \
+      "true < /dev/tcp/localhost/25 \
+    && true < /dev/tcp/localhost/143 \
+    && true < /dev/tcp/localhost/1025 \
+    && true < /dev/tcp/localhost/1143"
 
 ENTRYPOINT ["/protonmail/entrypoint.sh"]
 CMD ["run"]
