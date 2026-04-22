@@ -111,7 +111,7 @@ EXPOSE 143/tcp
 
 WORKDIR /protonmail
 
-COPY gpgparams entrypoint.sh /protonmail/
+COPY gpgparams entrypoint.sh healthcheck.sh /protonmail/
 
 COPY --from=build /build/bridge        /protonmail/
 COPY --from=build /build/proton-bridge /protonmail/
@@ -128,15 +128,11 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
          reptyr) apt-get install -y --no-install-recommends reptyr ;; \
          *) echo "Unsupported PTY_TOOL: ${PTY_TOOL}. Supported: dtach, abduco, reptyr." >&2 ; exit 1 ;; \
        esac \
-    && chmod +x /protonmail/entrypoint.sh \
+    && chmod +x /protonmail/entrypoint.sh /protonmail/healthcheck.sh \
     && rm -rf /var/lib/apt/lists/*
 
-HEALTHCHECK --interval=30s --timeout=5s --retries=3 --start-period=120s \
-  CMD /bin/bash -c \
-      "true < /dev/tcp/localhost/25 \
-    && true < /dev/tcp/localhost/143 \
-    && true < /dev/tcp/localhost/1025 \
-    && true < /dev/tcp/localhost/1143"
+HEALTHCHECK --interval=30s --timeout=10s --retries=3 --start-period=120s \
+  CMD /protonmail/healthcheck.sh
 
 ENTRYPOINT ["/protonmail/entrypoint.sh"]
 CMD ["run"]
