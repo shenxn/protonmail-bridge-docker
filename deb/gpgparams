@@ -1,7 +1,6 @@
-%no-protection
 %echo Generating a basic OpenPGP key
 Key-Type: RSA
-Key-Length: 2048
+Key-Length: 4096
 Name-Real: pass-key
 Expire-Date: 0
 %commit

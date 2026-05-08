@@ -25,4 +25,4 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends /tmp/protonmail.deb socat pass libsecret-1-0 ca-certificates procps \
     && rm -rf /var/lib/apt/lists/*
 
-CMD ["bash", "/protonmail/entrypoint.sh"]
+ENTRYPOINT ["bash", "/protonmail/entrypoint.sh"]
