@@ -4,6 +4,7 @@ set -ex
 
 # Initialize
 if [[ $1 == init ]]; then
+    echo "Entering 'init' mode"
 
     # Initialize pass
     gpg --generate-key --batch /protonmail/gpgparams
@@ -18,7 +19,14 @@ if [[ $1 == init ]]; then
     # Login
     /protonmail/proton-bridge --cli $@
 
+elif [[ $1 == debug ]]; then
+    echo "Entering 'debug' mode"
+
+    # Debug mode - call CLI directly
+    /protonmail/proton-bridge --cli
+
 else
+    echo "Entering 'default' mode"
 
     # socat will make the conn appear to come from 127.0.0.1
     # ProtonMail Bridge currently expects that.
