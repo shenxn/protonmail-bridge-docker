@@ -21,13 +21,14 @@ jobs:
     steps:
       - name: Compare upstream to registry
         id: check
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           version=$(curl -s https://api.github.com/repos/ProtonMail/proton-bridge/releases/latest | jq -r '.tag_name')
           echo "version=$version" >> $GITHUB_OUTPUT
 
-          token=$(curl -s "https://ghcr.io/token?scope=repository:${{ github.repository_owner }}/protonmail-bridge:pull" | jq -r '.token')
           exists=$(curl -s -o /dev/null -w '%{http_code}' \
-            -H "Authorization: Bearer $token" \
+            -H "Authorization: Bearer $GITHUB_TOKEN" \
             "https://ghcr.io/v2/${{ github.repository_owner }}/protonmail-bridge/manifests/$version")
 
           if [ "$exists" = "200" ]; then
