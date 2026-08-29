@@ -29,41 +29,25 @@ tag | description
 `build` | latest `build` image
 `[version]-build` | `build` images
 
-## Initialization
+## Starting the container
 
-To initialize and add account to the bridge, run the following command.
+To initialize and add account to the bridge, run the following steps:
 
+1. Start the container with a named volume (protonmail) for persistent storage.
 ```
-docker run --rm -it -v protonmail:/root shenxn/protonmail-bridge init
+docker run -it -v protonmail:/root shenxn/protonmail-bridge
 ```
+2. When you are done, press `CTRL+P` followed by `CTRL+Q`. This detaches the container from your terminal and keeps it running in the background.
 
-If you want to use Docker Compose instead, you can create a copy of the provided example [docker-compose.yml](docker-compose.yml) file, modify it to suit your needs, and then run the following command:
+## Setting up the bridge
 
+If you have not set up an account, you need to do the folliwing steps in the protonmail-bridge CLI interface:
+1. Connect to the running container by getting it's name using `docker ps` and then running:
 ```
-docker compose run protonmail-bridge init
+docker attach <container_name>
 ```
-
-Wait for the bridge to startup, then you will see a prompt appear for [Proton Mail Bridge interactive shell](https://proton.me/support/bridge-cli-guide). Use the `login` command and follow the instructions to add your account into the bridge. Then use `info` to see the configuration information (username and password). After that, use `exit` to exit the bridge. You may need `CTRL+C` to exit the docker entirely.
-
-## Run
-
-To run the container, use the following command.
-
-```
-docker run -d --name=protonmail-bridge -v protonmail:/root -p 1025:25/tcp -p 1143:143/tcp --restart=unless-stopped shenxn/protonmail-bridge
-```
-
-Or, if using Docker Compose, use the following command.
-
-```
-docker compose up -d
-```
-
-## Kubernetes
-
-If you want to run this image in a Kubernetes environment. You can use the [Helm](https://helm.sh/) chart (https://github.com/k8s-at-home/charts/tree/master/charts/stable/protonmail-bridge) created by [@Eagleman7](https://github.com/Eagleman7). More details can be found in [#23](https://github.com/shenxn/protonmail-bridge-docker/issues/23).
-
-If you don't want to use Helm, you can also reference to the guide ([#6](https://github.com/shenxn/protonmail-bridge-docker/issues/6)) written by [@ghudgins](https://github.com/ghudgins).
+2. Use the `add` command to add your ProtonMail account. You will be prompted to enter your ProtonMail username and password.
+3. After adding your account, use the `info` command to see the configuration information (username and password).
 
 ## Security
 
@@ -75,19 +59,6 @@ docker run -d --name=protonmail-bridge -v protonmail:/root -p 127.0.0.1:1025:25/
 
 Besides, you can publish only port 25 (SMTP) if you don't need to receive any email (e.g. as a email notification service).
 
-## Compatibility
-
-The bridge currently only supports some of the email clients. More details can be found on the official website. I've tested this on a Synology DiskStation and it runs well. However, you may need ssh onto it to run the interactive docker command to add your account. The main reason of using this instead of environment variables is that it seems to be the best way to support two-factor authentication.
-
 ## Bridge CLI Guide
 
 The initialization step exposes the bridge CLI so you can do things like switch between combined and split mode, change proxy, etc. The [official guide](https://protonmail.com/support/knowledge-base/bridge-cli-guide/) gives more information on to use the CLI.
-
-## Build
-
-For anyone who want to build this container on your own (for development or security concerns), here is the guide to do so. First, you need to `cd` into the directory (`deb` or `build`, depending on which type of image you want). Then just run the docker build command
-```
-docker build .
-```
-
-That's it. The `Dockerfile` and bash scripts handle all the downloading, building, and packing. You can also add tags, push to your favorite docker registry, or use `buildx` to build multi architecture images.
