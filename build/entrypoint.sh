@@ -16,7 +16,11 @@ if [[ $1 == init ]]; then
     pkill protonmail-bridge || true
 
     # Login
-    /protonmail/proton-bridge --cli $@
+    tmux new-session -d -s bridge-init "/protonmail/proton-bridge --cli $@"
+    echo "ProtonMail Bridge init running inside tmux session 'bridge-init'"
+    echo "Attach with: docker exec -it <container> tmux attach -t bridge-init"
+
+    sleep infinity
 
 else
 
@@ -26,10 +30,10 @@ else
     socat TCP-LISTEN:25,fork TCP:127.0.0.1:1025 &
     socat TCP-LISTEN:143,fork TCP:127.0.0.1:1143 &
 
-    # Start protonmail
-    # Fake a terminal, so it does not quit because of EOF...
-    rm -f faketty
-    mkfifo faketty
-    cat faketty | /protonmail/proton-bridge --cli $@
+    tmux new-session -d -s bridge "/protonmail/proton-bridge --cli $@"
+    echo "ProtonMail Bridge running inside tmux session 'bridge'"
+    echo "Attach with: docker exec -it <container> tmux attach -t bridge"
+
+    sleep infinity
 
 fi
