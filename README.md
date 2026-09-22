@@ -45,6 +45,12 @@ docker compose run protonmail-bridge init
 
 Wait for the bridge to startup, then you will see a prompt appear for [Proton Mail Bridge interactive shell](https://proton.me/support/bridge-cli-guide). Use the `login` command and follow the instructions to add your account into the bridge. Then use `info` to see the configuration information (username and password). After that, use `exit` to exit the bridge. You may need `CTRL+C` to exit the docker entirely.
 
+If you want to access the cli again later without initializing keys (for example to call `info` again), use this command:
+
+```
+docker compose run protonmail-bridge debug
+```
+
 ## Run
 
 To run the container, use the following command.
