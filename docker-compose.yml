@@ -2,7 +2,7 @@ version: '2.1'
 
 services:
   protonmail-bridge:
-    image: shenxn/protonmail-bridge
+    image: ghcr.io/jpdck/protonmail-bridge
     ports:
       - 1025:25/tcp
       - 1143:143/tcp

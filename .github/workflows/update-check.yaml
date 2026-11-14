@@ -11,14 +11,24 @@ on:
       - update-check.py
   schedule:
   - cron: '0 0 * * *'  # runs everyday at midnight
+  workflow_dispatch:
+
+permissions:
+  contents: read
 
 jobs:
   check:
     runs-on: ubuntu-latest
+    env:
+      # Only the default branch opens update pull requests; everything else is a dry run.
+      DRY_RUN: ${{ github.event_name == 'pull_request' || github.ref != 'refs/heads/master' }}
     steps:
     - name: Checkout
-      uses: actions/checkout@master
+      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       with:
-        token: ${{ secrets.PERSONAL_TOKEN }}
+        # The personal token is needed so that the update pull request triggers the build workflows.
+        token: ${{ (github.event_name == 'pull_request' || github.ref != 'refs/heads/master') && github.token || secrets.PERSONAL_TOKEN }}
     - name: Check Update
-      run: python3 update-check.py ${{ github.event_name == 'pull_request' }}
+      env:
+        GH_TOKEN: ${{ (github.event_name == 'pull_request' || github.ref != 'refs/heads/master') && github.token || secrets.PERSONAL_TOKEN }}
+      run: python3 update-check.py

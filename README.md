@@ -1,16 +1,13 @@
 # ProtonMail IMAP/SMTP Bridge Docker Container
 
-![version badge](https://img.shields.io/docker/v/shenxn/protonmail-bridge)
-![image size badge](https://img.shields.io/docker/image-size/shenxn/protonmail-bridge/build)
-![docker pulls badge](https://img.shields.io/docker/pulls/shenxn/protonmail-bridge)
-![deb badge](https://github.com/shenxn/protonmail-bridge-docker/workflows/pack%20from%20deb/badge.svg)
-![build badge](https://github.com/shenxn/protonmail-bridge-docker/workflows/build%20from%20source/badge.svg)
+![deb badge](https://github.com/jpdck/protonmail-bridge-docker/workflows/pack%20from%20deb/badge.svg)
+![build badge](https://github.com/jpdck/protonmail-bridge-docker/workflows/build%20from%20source/badge.svg)
 
 This is an unofficial Docker container of the [ProtonMail Bridge](https://protonmail.com/bridge/). Some of the scripts are based on [Hendrik Meyer's work](https://gitlab.com/T4cC0re/protonmail-bridge-docker).
 
-Docker Hub: [https://hub.docker.com/r/shenxn/protonmail-bridge](https://hub.docker.com/r/shenxn/protonmail-bridge)
+This is a fork of [shenxn/protonmail-bridge-docker](https://github.com/shenxn/protonmail-bridge-docker). Images are built from this repository and published to the GitHub Container Registry as `ghcr.io/jpdck/protonmail-bridge`.
 
-GitHub: [https://github.com/shenxn/protonmail-bridge-docker](https://github.com/shenxn/protonmail-bridge-docker)
+GitHub: [https://github.com/jpdck/protonmail-bridge-docker](https://github.com/jpdck/protonmail-bridge-docker)
 
 ## ARM Support
 
@@ -34,7 +31,7 @@ tag | description
 To initialize and add account to the bridge, run the following command.
 
 ```
-docker run --rm -it -v protonmail:/root shenxn/protonmail-bridge init
+docker run --rm -it -v protonmail:/root ghcr.io/jpdck/protonmail-bridge init
 ```
 
 If you want to use Docker Compose instead, you can create a copy of the provided example [docker-compose.yml](docker-compose.yml) file, modify it to suit your needs, and then run the following command:
@@ -50,7 +47,7 @@ Wait for the bridge to startup, then you will see a prompt appear for [Proton Ma
 To run the container, use the following command.
 
 ```
-docker run -d --name=protonmail-bridge -v protonmail:/root -p 1025:25/tcp -p 1143:143/tcp --restart=unless-stopped shenxn/protonmail-bridge
+docker run -d --name=protonmail-bridge -v protonmail:/root -p 1025:25/tcp -p 1143:143/tcp --restart=unless-stopped ghcr.io/jpdck/protonmail-bridge
 ```
 
 Or, if using Docker Compose, use the following command.
@@ -70,7 +67,7 @@ If you don't want to use Helm, you can also reference to the guide ([#6](https:/
 Please be aware that running the command above will expose your bridge to the network. Remember to use firewall if you are going to run this in an untrusted network or on a machine that has public IP address. You can also use the following command to publish the port to only localhost, which is the same behavior as the official bridge package.
 
 ```
-docker run -d --name=protonmail-bridge -v protonmail:/root -p 127.0.0.1:1025:25/tcp -p 127.0.0.1:1143:143/tcp --restart=unless-stopped shenxn/protonmail-bridge
+docker run -d --name=protonmail-bridge -v protonmail:/root -p 127.0.0.1:1025:25/tcp -p 127.0.0.1:1143:143/tcp --restart=unless-stopped ghcr.io/jpdck/protonmail-bridge
 ```
 
 Besides, you can publish only port 25 (SMTP) if you don't need to receive any email (e.g. as a email notification service).

@@ -2,12 +2,14 @@
 FROM debian:sid-slim AS build
 
 ARG version
+# Commit that ${version} pointed to when the version was bumped. Tags can be moved, commits cannot.
+ARG commit
 
 # Install dependencies
 RUN apt-get update && apt-get install -y golang build-essential libsecret-1-dev
 
 # Build
-ADD https://github.com/ProtonMail/proton-bridge.git#${version} /build/
+ADD https://github.com/ProtonMail/proton-bridge.git#${commit} /build/
 WORKDIR /build/
 RUN make build-nogui vault-editor
 
