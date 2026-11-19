@@ -12,8 +12,12 @@ RUN bash /install.sh
 FROM debian:sid-slim
 LABEL maintainer="Simon Felding <sife@adm.ku.dk>"
 
+# These are only exported if running as root
 EXPOSE 25/tcp
 EXPOSE 143/tcp
+
+EXPOSE 2025/tcp
+EXPOSE 2143/tcp
 
 WORKDIR /protonmail
 

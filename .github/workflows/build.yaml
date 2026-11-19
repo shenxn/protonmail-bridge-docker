@@ -57,14 +57,14 @@ jobs:
           outputs: type=image,"name=${{ env.DOCKER_REPO_DEV }}",push-by-digest=false,name-canonical=true,push=true
           context: ./build
           file: ./build/Dockerfile
-          tags: "${{ env.DOCKER_REPO_DEV }}:dev-${{ github.ref_name }}"
+          tags: "${{ env.DOCKER_REPO_DEV }}:dev-${{ github.sha }}"
           build-args: |
             version=${{ env.version }}
 
       - name: Run Trivy vulnerability scan
         uses: aquasecurity/trivy-action@0.30.0
         with:
-          image-ref: "${{ env.DOCKER_REPO_DEV }}:dev-${{ github.ref_name }}"
+          image-ref: "${{ env.DOCKER_REPO_DEV }}:dev-${{ github.sha }}"
           format: 'sarif'
           exit-code: 0
           severity: 'CRITICAL,HIGH'

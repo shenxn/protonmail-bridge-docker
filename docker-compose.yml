@@ -1,14 +1,19 @@
-version: '2.1'
-
 services:
   protonmail-bridge:
     image: shenxn/protonmail-bridge
+    container_name: protonmail-bridge
     ports:
       - 1025:25/tcp
       - 1143:143/tcp
     restart: unless-stopped
     volumes:
       - protonmail:/root
+    stdin_open: true
+    tty: true
+    logging:
+      options:
+        max-size: "1m"
+        max-file: "10"
 volumes:
   protonmail:
     name: protonmail
